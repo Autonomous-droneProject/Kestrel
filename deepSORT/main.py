@@ -1,0 +1,2 @@
+
+#compile all classes
