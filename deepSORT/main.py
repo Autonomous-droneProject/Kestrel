@@ -1,2 +1,27 @@
+#You need to add the sharedModules directoy to the python path
+#access you system
+import sys
+#file system path library
+from pathlib import Path
 
-#compile all classes
+#This line appends the str "Shared Modules" as the parent
+sys.path.append(str(Path(__file__).parent / "sharedModules"))
+
+from sharedModules.telloPreProcessing import PreProccessing as TpreP
+from sharedModules.YOLO.yoloHandler import YOLOModelHandler
+from sharedModules.telloPostProcessing import PostProcessing as TpostP
+from deepSORT.DataAssociation import DataAssociation as DAM
+from sharedModules.KalmanFilter import KalmanFilter as KF
+from sharedModules.TrackManagement import TrackManagement as TM
+
+
+# Creating objects for each class
+tello_preprocessing = TpreP()       # PreProcessing class
+yolo_handler = YOLOModelHandler()   # YOLOModelHandler class
+tello_postprocessing = TpostP()     # PostProcessing class
+data_association = DAM()            # DataAssociation class
+kalman_filter = KF()                # KalmanFilter class
+track_management = TM()             # TrackManagement class
+
+
+print("HELLO")

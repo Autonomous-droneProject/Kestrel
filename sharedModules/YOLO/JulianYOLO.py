@@ -1,4 +1,3 @@
-
 #This file will consist of the YOLOv11 download and any pre-processing needed.
 
 #YOLOv11 Import
@@ -23,6 +22,7 @@
 #Python Script w/ OpenCV (cv2) and YOLOv11 for object tracking on video frames or live video feed
 import cv2
 from ultralytics import YOLO
+import supervision as sv
 
 model = YOLO("yolo11x.pt")
 
