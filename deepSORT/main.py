@@ -1,11 +1,4 @@
 #You need to add the sharedModules directoy to the python path
-#access you system
-import sys
-#file system path library
-from pathlib import Path
-
-#This line appends the str "Shared Modules" as the parent
-sys.path.append(str(Path(__file__).parent / "sharedModules"))
 
 from sharedModules.telloPreProcessing import PreProccessing as TpreP
 from sharedModules.YOLO.yoloHandler import YOLOModelHandler
