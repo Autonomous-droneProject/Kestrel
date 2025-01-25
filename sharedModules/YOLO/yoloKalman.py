@@ -135,9 +135,12 @@ class KalmanTracker():
         if len(self.tracks) == 0:
             for bbox in bboxes:
                 self.tracks.append([bbox])
+            
+            return self.tracks
         
         convBBoxes = [convert_xywh_to_xyxy(bbox) for bbox in bboxes]
         convTrkedObj = [convert_xywh_to_xyxy(track[-1]) for track in self.tracks]
+        #print(f"Track Obj: {convTrkedObj}")
 
         # if there are more tracks in the list than bounding boxes, we have to delete some tracks
         if len(self.tracks) > len(bboxes):
@@ -157,6 +160,7 @@ class KalmanTracker():
             # delete the tracks with the lowests IoUs
             trkEnumSorted = sorted(enumerate(iouLst), key= lambda x: x[1])
             self.tracks = [self.tracks[i] for i, _ in trkEnumSorted[exTrack:]]
+            return self.tracks
         # elif there are less tracks in the list than bounding boxes, we have to create some tracks
         elif len(self.tracks) < len(bboxes):
             # find how many tracks are needed
@@ -174,12 +178,14 @@ class KalmanTracker():
             # NOTE: the id of the max value will correspond with the id of the bounding box
             # append to the tracks list new tracks with the bounding boxes with the lowest IoUs
             iouLow = sorted(enumerate(iouLst), key= lambda x: x[1])[:nTracks]
+            #print(f"iouLow: {iouLow}")
             self.tracks.extend([[bboxes[i]] for i, _ in iouLow])
+            return self.tracks
 
         # if the number of tracks equals the number of bounding boxes, then we don't need more tracks
         # Calculate the track's iou with each bounding box, store it in a list
         used = set()
-        for i, track in enumerate(self.tracks):
+        for _, track in enumerate(self.tracks):
             lasttrkobj = convert_xywh_to_xyxy(track[-1])
             maxIoU = 0
             idx = -1
@@ -202,8 +208,7 @@ class KalmanTracker():
             max_track_size = 3
             if len(track) > max_track_size:
                 # keep the last three delete the rest
-                self.tracks[i] = track[-max_track_size:]
-        
+                track = track[-max_track_size:]
         # return the tracks
         return self.tracks
 
