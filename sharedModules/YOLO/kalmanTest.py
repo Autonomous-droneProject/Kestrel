@@ -4,10 +4,10 @@ from ultralytics import YOLO
 from yolo_kalman import KalmanTracker, convert_bbox_to_z
 import numpy as np
 
-trt_model = YOLO('yolo11n.pt')
+trt_model = YOLO('yolo11m.pt')
 
 # Open the video file
-video_path = 'PATH_TO_VIDEO'
+video_path = 'cars4.avi'
 cap = cv2.VideoCapture(video_path)
 
 
@@ -39,9 +39,35 @@ while True:
         bboxes = result.boxes.xywh.cpu().numpy().astype(int)
         if fc == 1: predBBoxes = KalmanTracker()
         tracks = predBBoxes.bboxes_to_tracks(bboxes)
+        
+        # TEST YOLO's DETECTIONS
+        # for nbbox in bboxes:
+        #     x1 = int(nbbox[0] - nbbox[2]/2)
+        #     y1 = int(nbbox[1] - nbbox[3]/2)
+        #     x2 = int(nbbox[0] + nbbox[2]/2)
+        #     y2 = int(nbbox[1] + nbbox[3]/2)
+        #     cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
+        # TEST TRACK CREATION AND DELETION ALGORITHM
+        # for track in tracks:
+        #     nbbox = track["history"][-1]
+        #     x1 = int(nbbox[0] - nbbox[2]/2)
+        #     y1 = int(nbbox[1] - nbbox[3]/2)
+        #     x2 = int(nbbox[0] + nbbox[2]/2)
+        #     y2 = int(nbbox[1] + nbbox[3]/2)
+        #     cv2.putText(
+        #         frame,
+        #         str(track["id"]),
+        #         (int(x1), int(y1) - 10),
+        #         fontFace = cv2.FONT_HERSHEY_SIMPLEX,
+        #         fontScale = 0.6,
+        #         color = (0, 255, 0),
+        #         thickness=2
+        #     )
+        #     cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+        # TEST KALMAN FILTER PREDICTIONS
         for nbbox in predBBoxes.pred_tracks():
-            #if fc == 1: predBBoxes.kalman.x = np.append(convert_bbox_to_z(track[-1]), [0,0,0])
             x1 = int(nbbox[0] - nbbox[2]/2)
             y1 = int(nbbox[1] - nbbox[3]/2)
             x2 = int(nbbox[0] + nbbox[2]/2)
