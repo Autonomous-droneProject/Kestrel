@@ -226,7 +226,7 @@ class KalmanTracker():
     def pred_tracks(self):
         lstOfPred = list()
         if len(self.tracks) == 0:
-            return
+            return [] 
         
         for track in self.tracks:
             # if the length of the track is just 1, then initialize the kalman filter with that value
