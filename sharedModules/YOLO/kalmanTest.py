@@ -1,13 +1,15 @@
 import cv2
-import time
 from ultralytics import YOLO
-from yolo_kalman import KalmanTracker, convert_bbox_to_z
-import numpy as np
+from yoloKalman import KalmanTracker, convert_bbox_to_z
+# import numpy as np
+import sys
+from time import perf_counter
 
 trt_model = YOLO('yolo11m.pt')
 
 # Open the video file
-video_path = 'cars4.avi'
+video_path = './inatten_blindness.mp4'
+# video_path = './cars-stock-footage.mp4'
 cap = cv2.VideoCapture(video_path)
 
 
@@ -21,11 +23,26 @@ size = (frame_width, frame_height)
 
 # Define the codec and create a VideoWriter object
 fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-out = cv2.VideoWriter('stream.avi', fourcc, 20, size)
+out = cv2.VideoWriter('stream.avi', fourcc, fps, size)
 
-#t1 = time.time()
 fc = 0
+
+# Frame delay so that the video is displayed with original fps
+# Use "python kalmanTest.py --show" to use
+if len(sys.argv) > 1:
+    if sys.argv[1] == "--show":
+        delay = int(1000 / fps)
+        show_video = True
+    else:
+        print(f"Invalid argument: \"{sys.argv[1]}\"")
+        exit()
+else:
+    delay = 1
+    show_video = False
+
 while True:
+    start_time = perf_counter()
+
     ret, frame = cap.read()
     if not ret:
         break
@@ -76,7 +93,15 @@ while True:
 
     # Write the frame to the VideoWriter object
     out.write(frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+
+    if show_video: cv2.imshow("Video with BBoxes (press q to quit)", frame)
+    
+    end_time = perf_counter()
+    op_time_delay = int((end_time - start_time) * 1000)
+    adjusted_delay = max(1, int(delay - op_time_delay))
+    # If the video is shown, then the delay on the output of each frame is adjusted
+    # to keep the video at the original fps.
+    if cv2.waitKey(adjusted_delay) & 0xFF == ord('q'):
         break
 
 
