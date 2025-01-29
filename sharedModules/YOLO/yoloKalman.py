@@ -120,7 +120,17 @@ class Kfilter():
 class KalmanTracker():
     def __init__(self):
         self.tracks = list()
+        self.id = 0
     
+    def create_track(self, bbox):
+        track = {
+            "id": self.id,
+            "filter": Kfilter(),
+            "history": [bbox]
+        }
+        self.id += 1
+        return track
+
     def bboxes_to_tracks(self, bboxes: np.int32):
         """
         This function must handle:
@@ -134,12 +144,13 @@ class KalmanTracker():
         # if tracks is 0, then we must be at the first frame
         if len(self.tracks) == 0:
             for bbox in bboxes:
-                self.tracks.append([bbox])
+                track = self.create_track(bbox)
+                self.tracks.append(track)
             
             return self.tracks
         
         convBBoxes = [convert_xywh_to_xyxy(bbox) for bbox in bboxes]
-        convTrkedObj = [convert_xywh_to_xyxy(track[-1]) for track in self.tracks]
+        convTrkedObj = [convert_xywh_to_xyxy(track["history"][-1]) for track in self.tracks]
         #print(f"Track Obj: {convTrkedObj}")
 
         # if there are more tracks in the list than bounding boxes, we have to delete some tracks
@@ -179,14 +190,14 @@ class KalmanTracker():
             # append to the tracks list new tracks with the bounding boxes with the lowest IoUs
             iouLow = sorted(enumerate(iouLst), key= lambda x: x[1])[:nTracks]
             #print(f"iouLow: {iouLow}")
-            self.tracks.extend([[bboxes[i]] for i, _ in iouLow])
+            self.tracks.extend([self.create_track(bboxes[i]) for i, _ in iouLow])
             return self.tracks
 
         # if the number of tracks equals the number of bounding boxes, then we don't need more tracks
         # Calculate the track's iou with each bounding box, store it in a list
         used = set()
         for _, track in enumerate(self.tracks):
-            lasttrkobj = convert_xywh_to_xyxy(track[-1])
+            lasttrkobj = convert_xywh_to_xyxy(track["history"][-1])
             maxIoU = 0
             idx = -1
             for i, bbox in enumerate(convBBoxes):
@@ -201,41 +212,43 @@ class KalmanTracker():
                     
             # append the bounding box to the corresponding track
             if idx != -1:
-                track.append(bboxes[idx])
+                track["history"].append(bboxes[idx])
                 used.add(idx)
             # delete the track's previous bounding box
             #print(len(track))
             max_track_size = 3
-            if len(track) > max_track_size:
+            if len(track["history"]) > max_track_size:
                 # keep the last three delete the rest
-                track = track[-max_track_size:]
+                track["history"] = track["history"][-max_track_size:]
         # return the tracks
         return self.tracks
 
     def pred_tracks(self):
-        predBBoxesForTracks = list()
+        lstOfPred = list()
+        if len(self.tracks) == 0:
+            return
+        
         for track in self.tracks:
-            # predict the next bounding box in the track
-            kfilter = Kfilter()
             # if the length of the track is just 1, then initialize the kalman filter with that value
-            if len(track) == 1:
-                kfilter.kalman.x = np.append(convert_bbox_to_z(track[-1]), [0,0,0])
+            if len(track["history"]) == 1:
+                track["filter"].kalman.x = np.append(convert_bbox_to_z(track["history"][-1]), [0,0,0])
                 # predict the kalman filter, get the new bounding box
-                nbbox = kfilter.predict()
+                nbbox = track["filter"].predict()
                 #update the kalman filter
-                kfilter.update(track[-1])
+                track["filter"].update(track["history"][-1])
             else:
             # the kalman filter object will get reinitialized every time this loop runs
             # therefore, on a hypothetical second call to this method, the original kalman filter for that
             # track will be lost. Hence, we must store the predictions of the kalman filter on the tracks list
             # so that when the method gets called again, it will be updated with all the values of the kalman filter
-                for bbox in track:
-                    kfilter.update(bbox)
-                    nbbox = kfilter.predict()
+                nbbox = track["filter"].predict()
+                track["filter"].update(track["history"][-1])
             
-            predBBoxesForTracks.append(nbbox)
-                    
-            
+            lstOfPred.append(nbbox)
+        
+        return lstOfPred
 
-        return predBBoxesForTracks
 
+
+
+    
