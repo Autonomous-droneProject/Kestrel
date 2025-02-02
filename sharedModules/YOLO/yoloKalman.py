@@ -237,10 +237,7 @@ class KalmanTracker():
                 #update the kalman filter
                 track["filter"].update(track["history"][-1])
             else:
-            # the kalman filter object will get reinitialized every time this loop runs
-            # therefore, on a hypothetical second call to this method, the original kalman filter for that
-            # track will be lost. Hence, we must store the predictions of the kalman filter on the tracks list
-            # so that when the method gets called again, it will be updated with all the values of the kalman filter
+            # do a prediction and update the filter based on the most current bbox in the track's history
                 nbbox = track["filter"].predict()
                 track["filter"].update(track["history"][-1])
             
