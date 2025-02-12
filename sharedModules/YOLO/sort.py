@@ -257,7 +257,7 @@ class Sort(KalmanTracker):
             # detection, delete it
             if len(unmatched_tracks) > 0:
                 for t in unmatched_tracks:
-                    self.tracks.pop(t)
+                    del self.tracks[t]
             
 
         return self.tracks
