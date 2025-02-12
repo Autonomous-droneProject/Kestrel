@@ -189,6 +189,9 @@ class KalmanTracker():
                 # append it to the matched detections list
                 matched_detections.append(matched)
         
+        # sort the unmatched track list to avoid indexing errors when deleting tracks
+        unmatched_tracks.sort(reverse=True)
+        
         return matched_detections, unmatched_bboxes, unmatched_tracks
 
     def pred_tracks(self):
@@ -221,16 +224,13 @@ class Sort(KalmanTracker):
         super().__init__()
         self.bboxes = np.empty((2,3))
 
-    def get_bboxes(self, bboxes: np.ndarray):
-        self.bboxes = bboxes
-
-    def manage_tracks(self, bboxes: np.ndarray):
+    def manage_tracks(self, bboxes: np.ndarray, iou_threshold=0.3):
         """
         This function is in charged of managing all the tracks correctly and returns
         a list of tracks
         """
         # get new bounding boxes
-        self.get_bboxes(bboxes)
+        self.bboxes = bboxes
 
         # check to see if there are no tracks
         if (len(self.tracks) == 0):
@@ -242,7 +242,7 @@ class Sort(KalmanTracker):
             list_predictions = self.pred_tracks()
 
             # get list of matched detections, unmatched detections, and unmatched tracks
-            matches, unmatched_detections, unmatched_tracks = self.associate_detections(list_predictions, bboxes)
+            matches, unmatched_detections, unmatched_tracks = self.associate_detections(list_predictions, bboxes, iou_threshold)
 
             # update kalman filter for each track
             self.update_tracks(matches, bboxes)
@@ -257,19 +257,7 @@ class Sort(KalmanTracker):
             # detection, delete it
             if len(unmatched_tracks) > 0:
                 for t in unmatched_tracks:
-                    if t > len(self.tracks) - 1: continue
                     self.tracks.pop(t)
-            
             
 
         return self.tracks
-
-
-
-
-
-
-
-
-
-    
