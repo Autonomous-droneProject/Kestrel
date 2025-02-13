@@ -197,3 +197,14 @@ tornado==6.4.1
 tqdm==4.66.5
 traitlets==5.14.3
 triton==3.1.0
+typing_extensions==4.12.2
+tzdata==2024.2
+ultralytics @ git+https://github.com/ultralytics/ultralytics.git@cece2ee2cf661502d0fe15656574f486625d8490
+ultralytics-thop==2.0.8
+urllib3==2.2.3
+watchdog==5.0.3
+wcwidth==0.2.13
+webencodings==0.5.1
+Werkzeug==3.0.4
+wrapt==1.16.0
+wurlitzer==3.1.1
