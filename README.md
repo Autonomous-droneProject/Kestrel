@@ -5,6 +5,7 @@ Three Folders:
 1) deepSORT
 2) SORT
 3) shared Modules
+4) Docker
 
 Both the deepSORT and SORT models consist of the following modules:
 1) Data Association Module
