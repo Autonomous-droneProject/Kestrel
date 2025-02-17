@@ -44,30 +44,30 @@ class CNNDeepSORT(nn.Module):
         self.pool = nn.AdaptiveAvgPool2d((1,1))
         self.fc = nn.Linear(in_features=128, out_features=embedding_dim)
 
-#Forward propagation method for training the CNN.
-def forward(self,x):
-    '''
-        Convolutional Layer:
-            input: Image
-            output: Feature maps that highlight different patterns in the image/frame
+    #Forward propagation method for training the CNN.
+    def forward(self,x):
+        '''
+            Convolutional Layer:
+                input: Image
+                output: Feature maps that highlight different patterns in the image/frame
 
-        Batch Normalization:
-            input: Feature map and number of features
-            output: A feature map that will converge faster and reduce covariate shift.
+            Batch Normalization:
+                input: Feature map and number of features
+                output: A feature map that will converge faster and reduce covariate shift.
 
-        Rectified Linear Unit:
-            input: The summation of all neurons in one layers' activations multplied by their weights and added their biases
-            output: If input < 0, output is 0. If input > 0, output is input. This removes any negative values that do not meet a threshold.
-            It also introduces non-linearity to the network, allowing for complex learning.
-    '''
-    x = F.relu(self.bn1(self.conv1(x)))
-    x = F.relu(self.bn2(self.conv(x)))
-    x = F.relu(self.bn3(self.conv3(x)))
+            Rectified Linear Unit:
+                input: The summation of all neurons in one layers' activations multplied by their weights and added their biases
+                output: If input < 0, output is 0. If input > 0, output is input. This removes any negative values that do not meet a threshold.
+                It also introduces non-linearity to the network, allowing for complex learning.
+        '''
+        x = F.relu(self.bn1(self.conv1(x)))
+        x = F.relu(self.bn2(self.conv2(x)))
+        x = F.relu(self.bn3(self.conv3(x)))
 
-    x = self.pool(x) #Downsizes the spatial dimensions of the feature map to 1x1 using Global Average Pooling
-    x = torch.flatten(x,1) #Converts the multi-dimensional tensors into a 2D tensor, (batch size * features)
-    x = self.fc(x) #A linear layer that matches the feature map to the desired embedding dimension (128)
-    return F.normalize(x,p=2, dim=1) #Uses euclidean norm to normalize a tensor along a specific dimension
+        x = self.pool(x) #Downsizes the spatial dimensions of the feature map to 1x1 using Global Average Pooling
+        x = torch.flatten(x,1) #Converts the multi-dimensional tensors into a 2D tensor, (batch size * features)
+        x = self.fc(x) #A linear layer that matches the feature map to the desired embedding dimension (128)
+        return F.normalize(x,p=2, dim=1) #Uses euclidean norm to normalize a tensor along a specific dimension
 
 #instantiate the model
 model = CNNDeepSORT()
