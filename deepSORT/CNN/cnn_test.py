@@ -57,7 +57,13 @@ def run_object_detection_yolo(frame, model):
 #implement the CNN feature extractor by comparing embeddings to see if the reappearing object is the same object that disappeared.
 #We'll do this with cosine similarity.
 '''
+    Inputs: embeddings for two different tracked objects
+    Output: a similarity score between them
+    Logic: reshape the embedding matrices to vectors. .reshape(1,-1) changes the matrix into a 2D array with one row
+    and as many columns as there are elements in the original vector, which is what the -1 does. It turns the row vector into a matrix with one row.
+    This is done because cosine similarity function expects a vector.
     
+    Cosine similarity itself measures the angle between 2 vectors. If it's a small angle, then they are similar. If it is a large angle then they are not.
 '''
 def compare_embeddings(embedding1, embedding2):
     similarity = cosine_similarity(embedding1.reshape(1,-1), embedding2.reshape(1,-1))[0][0]
