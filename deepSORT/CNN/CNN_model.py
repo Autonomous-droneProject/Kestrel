@@ -22,6 +22,9 @@ class CNNDeepSORT(nn.Module):
         '''
         # Batch Normalization normalizes activations between the layers during training. This reduces the covariate shift
         # aka the change of the distribution of inputs from one layer to the next. Which ensures faster training.
+        #x(hat) = (x - mean)/std dev
+        #then y = w(x hat) + b
+        #We do this to normalize the embedding values before the activation function is applied, this also reduces overfitting (by regularizing the data)
 
         #The first convolutional layer where the convolution math operation is performed. We are performing this in a 2D space.
         self.conv1 = nn.Conv2d(in_channels=3, out_channels=32, kernel_size=3, stride=1, padding=1)
@@ -71,4 +74,4 @@ class CNNDeepSORT(nn.Module):
 
 #instantiate the model
 model = CNNDeepSORT()
-print(model)
+#print(model)
