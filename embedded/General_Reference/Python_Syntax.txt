@@ -1,0 +1,291 @@
+Syntax for Python
+
+Print statement:
+print("Enter thing you want to be printed")
+
+Define Variable:
+For number:
+Variable_int = whatever number you want
+(no period)
+Variable_float = whatever number you want.
+(period is necessary to declare a float)
+For string:
+Variable2 = "whatever you want"
+(no period)
+
+Comments:
+Unlike most languages which use 
+/* multiline comment here */ , python has no such tool.
+
+For single line comments, use the following:
+# singleline comment here (space unnecessary)
+(you can do as many of these as you want in a row)
+
+DO NOT use ''' or """ for multiline comments
+
+Display Variable:
+Simply type what variable you defined and run it
+
+Simple Math:
++ : addition
+- : subtraction
+* : multiply
+**: to the power of
+/ : divided by
+% : modulo (remainder)
+abs() : Absolute value (whatever in parenthesis)
+
+Example: you would write c2 NOT 2c
+
+First Steps:
+import numpy as np              : imports numpy as np
+import matplotlib.pyplot as plt : imports matplotlib.pyplot as plt
+import math			: imports math
+from math import *		: makes it so you don't need to type math.
+import csv
+import pandas as pd
+
+Arrays:
+array_name = np.arange (start, end, step)
+array_name [specific value: specific value: specific value]
+this prints whatever values of the array you specified and excludes all other values
+
+np.max (array_name) displays the max value of the array defined.
+np.min (array_name) displays the min value of the array defined.
+np.mean(array_name) displays the mean value of the array defined.
+
+Plots:
+plt.figure(figsize = (length, height))
+plt.plot(array_name[starting value : ending value], 
+	array_name2[starting value : ending value], 
+	color = 'whatever color you want')
+plt.title('whatever title you want')
+plt.xlabel('whatever', fontsize = any number)
+plt.ylabel('whatever', fontsize = any number)
+NOTE the starting and ending values are only when you want to focus on
+a specific range in the graph. They aren't necessary.
+
+More GeneralFunctions:
+math.ceil(number) : rounds up
+math.floor(number): rounds down
+
+Define Function:
+def function_name(variable, variable):
+then write function equation
+return variable
+
+example:
+def distance(t, u):
+	"""description of what function does"""
+	s = u * t
+	return s
+
+Call the docstring to figure out what a function does:
+print(function_name.__doc__)
+
+Import function:
+from function_name import *
+
+Lists and tuple in Python:
+list = [number, number]		The numbers determine the number of elements in a list.
+list				displays the list
+print(list [number])		prints the element in the list. Python counts from 0
+list.sort(reverse=True)		
+list				sort list in reverse order
+
+Logarithms:
+Example: Create an array y that is the base 10 logarithm of x. 
+Print y. Print the 10th to 24th elements of x and y. 
+Create an array z that is the same as y. 
+Change the 30th to 140th elements of z to be the 1/10 of their current value 
+and the 500th to 600th elements of z to be 10 times larger than their 
+current value. Print z from the 600th element to the 100th element going backwards 
+with a step of 50 (so the 600th, 550th, 500th etc element). 
+
+y = np.log10(x)
+print(y[9 : 24], x[9 : 24])
+z = y
+z[29 : 140] = 0.1 * z[29 : 140]
+z[499 : 600] = 10. * z[499 : 600]
+print(z[600: 100: -50])
+print(z[ : 5])
+print(z[989: ])
+
+Lists:
+list = list(range(start, end, step))
+Lists are NOT arrays. To do numerical computations with their elements we need to
+call them one by one.
+To multiply a list by a number, do the following:
+for i in range(len(list)):
+	print(list[i]*number)
+NOTE this is the same as the command:
+array = np.arange(start, end, step)
+print(array * number)
+
+Array Commands:
+array = np.arange(start, end)		Default step of one when no step is given
+print(array[ : number])			prints until number
+print(array[number1 : number2])		prints from number1 to number2
+print(array[number1 : number2 : step])	prints from number1 to number2 with a step
+print(array[number1 : : step])		prints from number1 to end with a step
+array[value number] = number		assigns a number to a specific value in the array
+array[vnumber1 : vnumber2] = number	assigns a number to value vnumber1 through vnumber2
+
+For - If - While Loops:
+
+For Loops:
+A for loop is iterating over a parameter to do a specific thing.
+Syntax:
+for some_variable_here in some_function_here:
+	command_for_loop
+
+Looping through a string:
+strings contain a sequence of characters, and are iterable objects.
+for x in "string":
+	print(x)			This prints each letter of the string
+
+Statements:
+
+break - stop the loop before it has looped through all the items:
+Example:
+fruits = ["apple", "banana", "cherry"]
+for x in fruits:
+	print(x)
+	if x == "banana":
+		break			prints apple banana
+
+continue - stop the current iteration of the loop and continue to the next:
+Example:
+fruits = ["apple", "banana", "cherry"]
+for x in fruits:
+	if x == "banana":
+		continue
+	print(x)			prints apple cherry
+
+range - returns a sequence of numbers starting from 0 (default) by increments of 1 (default)
+and ends at a specified number.
+Example:
+for x in range(6)
+	print(x)			prints 0 1 2 3 4 5
+NOTE: the full sequence of range is range(start, end, step)
+
+else - specifies a block of code to be executed when the loop is finished:
+Example:
+for x in range(6):
+	print(x)
+else:
+	print("finally finished!")	prints 0 1 2 3 4 5 finally finished!
+
+
+If Loops:
+Conditional statement that does something only IF the condition(s) is met.
+Syntax:
+if:
+if test_expression:
+	statement(s)
+
+if...else:
+if test_expression:
+	body of if
+else:
+	body of else
+
+if...elif...else:
+if test_expression:
+	body of if
+elif test_expression:
+	body of elif
+else:
+	body of else
+
+
+While Loops:
+Does something 'while' a condition(s) is true. If not, it stops.
+Syntax:
+while:
+while test_expression:
+	body of while
+
+while...else:
+while test_expression:
+	body of while
+else:
+	body of else
+
+Nested loops: Loops inside of other loops
+
+Counters:
+Useful for looping something up to a certain point.
+
+Example:
+counter = 0				stores a variable 'counter'
+while counter < 3:			specifies the while condition of counter less than 3
+	print("inside loop")		what to do when counter < 3
+	counter = counter + 1		
+else:					what to do when counter >= 3
+	print("inside else")
+
+NOTE: counter here is just a variable. You will most likely use i and j or
+any other char you want.
+
+Inputs:
+The default input of python is strings
+Syntax:
+whatever = input()			take input from user (string)
+whatever = str(input())			take string input    (words)
+whatever = int(input())			take integer input   (numbers)
+
+Multiple inputs:
+If you want to take multiple inputs on the same line, there are two options:
+1. split()
+2. list compression
+
+Split Syntax:
+input().split(separator, maxsplit)
+input().split()
+Example:
+x, y, z = [int(x) for x in input("Enter three values: ").split()]
+print("First Number is: ", x)
+print("Second Number is: ", y)
+print("Third Number is:", z)
+print()
+
+NOTE: You can have as many inputs as you want, so long as you define each
+one i.e. x, y, z, a, b, ... and the same number of print statements.
+
+EXCEL:
+from openpyxl import load_workbook
+
+wb = load_workbook(filename="PHY2049C Lab 1 Group 3.xlsx", 
+                   read_only=True)
+# whatever name the excel file has
+ws = wb['Sheet1']
+
+# Read the cell values into a list of lists
+data_rows = []
+for row in ws['B3':'E5']:
+    data_cols = []
+    for cell in row:
+        data_cols.append(cell.value)
+    data_rows.append(data_cols)
+
+# Transform into dataframe
+import pandas as pd
+df = pd.DataFrame(data_rows)
+
+# this command selects a portion of a list from an excel sheet
+# the range of values collected is given below
+# for row in ws['cell_start':'cell_end']:
+
+print( 'Listed is the raw data from the 4 different orientations. \nEach Orientation was tested 3 times:' )
+print(df)
+# prints the table section defined
+
+
+
+
+
+
+
+
+
