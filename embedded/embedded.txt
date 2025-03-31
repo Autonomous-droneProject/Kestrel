@@ -1,1 +1,51 @@
-contains embedded CODE
+Monday February 17th 2025 ~
+
+Core requirements (Feel free to add and edit)
+Power on
+Take off
+Locate target
+Follow target
+Land 
+
+
+Expansion on Core Requirements:
+
+1.) Power On
+—---------------
+Turn on all systems
+Perform Systems Check
+Connect To Server (?)
+
+2.) Take off
+—---------------
+Rise to a set height
+
+3.) Locate target 
+—---------------
+Put target in frame
+Position camera (angle)
+Check if target is moving
+Determine target’s direction of movement
+Start recording
+
+
+4.) Follow Target
+—---------------
+Find distance to target
+Compare w/ distance parameter
+Check for any obstacles
+Match target speed
+Generate path to target
+re-check(#3)
+re-check(#2)
+Start recording
+
+5.) Land
+—---------------
+Check if ground is clear
+Check height
+Check if solid
+Descend
+Turn off
+Note: Recording Halt T.B.D
+
