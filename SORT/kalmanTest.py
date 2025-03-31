@@ -1,5 +1,6 @@
 import cv2
 from ultralytics import YOLO
+# https://github.com/rlabbe/filterpy/blob/master/filterpy/kalman/kalman_filter.py
 from yoloKalman import KalmanTracker, convert_bbox_to_z
 # import numpy as np
 import sys
@@ -8,7 +9,7 @@ from time import perf_counter
 trt_model = YOLO('yolo11m.pt')
 
 # Open the video file
-video_path = './inatten_blindness.mp4'
+video_path = 'noResult.mp4'
 # video_path = './cars-stock-footage.mp4'
 cap = cv2.VideoCapture(video_path)
 
@@ -22,7 +23,7 @@ fps = cap.get(cv2.CAP_PROP_FPS)
 size = (frame_width, frame_height) 
 
 # Define the codec and create a VideoWriter object
-fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 out = cv2.VideoWriter('stream.avi', fourcc, fps, size)
 
 fc = 0

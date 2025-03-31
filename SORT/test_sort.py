@@ -2,12 +2,20 @@ import cv2
 from ultralytics import YOLO
 from sort import Sort
 
+import os
+print("Current working directory:", os.getcwd())
+
+
 trt_model = YOLO('yolo11m.pt')
 
 # Open the video file
-video_path = 'cars4.avi'
+video_path = "C:/Users/dtj10/02-CLUBS_AND_PROJECTS/ACM/DroneProject/Repo/Main/SORT/bestResult.mp4"
 cap = cv2.VideoCapture(video_path)
 
+#Check if cap actually opened
+if not cap.isOpened():
+    print('CAP NOT OPENED')
+    exit()
 
 # We need to set resolutions. 
 # so, convert them from float to integer. 
@@ -18,8 +26,8 @@ fps = cap.get(cv2.CAP_PROP_FPS)
 size = (frame_width, frame_height) 
 
 # Define the codec and create a VideoWriter object
-fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-out = cv2.VideoWriter('stream.avi', fourcc, 20, size)
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+out = cv2.VideoWriter('./stream.mp4', fourcc, 24, size)
 
 fc = 0
 sort = Sort()
