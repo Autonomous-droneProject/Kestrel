@@ -127,7 +127,7 @@ class DataAssociation:
         pass
 
     #Element-wise Weighted Mean of Every Cost Matrix Value (𝑊𝑀(𝐷,𝑃))
-    def weighted_mean_cost_matrix(tracks, detections, image_dims, lambda_iou=0.33, lambda_de=0.33, lambda_r=0.34):
+    def weighted_mean_cost_matrix(self, tracks, detections, image_dims, lambda_iou=0.33, lambda_de=0.33, lambda_r=0.34):
         """
         Computes the element-wise weighted mean of every cost matrix value:
 
@@ -135,17 +135,68 @@ class DataAssociation:
 
         where λ_IoU + λ_DE + λ_R = 1.
         """
-        pass
+        '''
+        It calculates a combined cost based on the Intersection over Union (IoU), 
+        Euclidean distance, and bounding box ratio metrics, using specified weights.
+        '''
+        num_tracks = len(tracks)
+        num_detections = len(detections)
+
+        if num_tracks == 0 or num_detections == 0:
+            return np.array([]) #Return an empty array if there are no tracks or detections
+
+        cost_matrix = np.zeros((num_tracks, num_detections))
+
+        #Ensure the weights sum to 1.0
+        sum_lambdas = lambda_iou + lambda_de + lambda_r
+        if not np.isclose(sum_lambdas, 1.0):
+            print("Warning: Lambda weights do not sum to 1.0. I will normalize them.")
+            lambda_iou /= sum_lambdas
+            lambda_de /= sum_lambdas
+            lambda_r /= sum_lambdas
+
+        #Compute the cost matrices using other cost functions. All other functions SHOULD return cost matrices, if not change to: 1.0 - output_matrix
+        cost_iou = self.iou_cost(tracks,detections) 
+        cost_euclidean = self.euclidean_cost(tracks, detections, image_dims)
+        cost_ratio = self.bbox_ratio_cost(tracks, detections)
+
+        #Vectorized weight sum. NumPy arrays are implemented in C under the hood.
+        #So with these arrays, math operations are executed in compiled C code, not interpreted Python
+        #Rather than iterating through with nested loops, we can perform vector/matrix multiplication on the arrays as a whole
+        cost_matrix = (
+            lambda_iou * cost_iou +
+            lambda_de * cost_euclidean +
+            lambda_r * cost_ratio
+        )
+        
+        return cost_matrix
+
 
     #Class Gate Update Based on Object Class Match (𝐶∗(𝐷,𝑃))
-    def class_gate_cost_matrix(cost_matrix, track_classes, detection_classes):
+    def class_gate_cost_matrix(self, cost_matrix, track_classes, detection_classes):
         """
         Updates the cost matrix based on the match between predicted and detected
-        object class. If the class labels do not match, the cost is set to infinity:
+        object class. If the class labels do not match, the cost is set to 0:
 
         C*(Ci, j, Di, Pi) = { Ci, j if Class_Di = Class_Pi, 0 otherwise }
 
         for i ∈ D, j ∈ P.
         """
-        pass
+        '''
+        This function updates cost matrices based on the match between 
+        predicted and detected object classes'''
+        num_tracks = cost_matrix.shape[0]
+        num_detections = cost_matrix.shape[1]
 
+        if num_tracks != (track_classes) or num_detections != len(detection_classes):
+            raise ValueError("Dimensions of cost_matrix, track_classes, and detection_classes do not match - Class Gate Cost Matrix")
+
+        #Create a boolean mask where classses match
+        #             Reshapes to (num_tracks, 1)     Reshapes to (1, num_detections)
+        match_mask = (track_classes[:, None] == detection_classes[None, :]) #Shape = [num_tracks, num_detections]
+        #Because track_classes has the same number of columns as detection_classes has rows, we can perform matrix multiplication
+        
+        #Apply the mask and keep the values where classes match, zero where they do not
+        gated_cost_matrix = cost_matrix * match_mask
+        
+        return gated_cost_matrix
