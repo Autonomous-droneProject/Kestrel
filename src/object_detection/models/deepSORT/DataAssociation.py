@@ -42,19 +42,26 @@ class DataAssociation:
         cost_r = 1.0 - similarity_r.
         
         """ 
-        
-        # assuming detections/tracks is a list of list
-        num_tracks, num_detections = len(tracks), len(detections)
-        if num_tracks == 0 or num_detections == 0:
+        if len(tracks) == 0 or len(detections) == 0:
             return np.array([])
-        
-        bbox_cost_matrix = np.zeros((num_tracks, num_detections))
-        for i in range(num_tracks):
-            for j in range(num_detections):
-                # calculates ratio for assigning detection to track
-                ratio1 = (detections[j][2] * detections[j][3]) / (tracks[i][2] * tracks[i][3])
-                ratio2 = (tracks[i][2] * tracks[i][3]) / (detections[j][2] * detections[j][3])
-                bbox_cost_matrix[i, j] = 1.0 - min(ratio1, ratio2) # ensures between 0 and 1
+
+        detections = np.array(detections) # (D, 4)
+        tracks = np.array(tracks) # (T, 4)
+
+        # Gets every width and height from each row into 2 1D arrays and calculates area
+        detection_areas = detections[:, 2] * detections[:, 3]
+        track_areas = tracks[:, 2] * tracks[:, 3] # (T,) = (T,) * (T,)
+
+        # Transform the 1D arrays to broadcast into (D, T)
+        detection_areas = detection_areas[:, None]# (D, 1): [[1], [2], [3]] 
+        track_areas = track_areas[None, :] #        (1, T): [[1, 2, 3, 4]]
+
+        # Calculates ratio and broadcasts to (D, T)
+        ratio1 = detection_areas / track_areas
+        ratio2 = track_areas / detection_areas
+
+        # Calculates cost at every [i, j]
+        bbox_cost_matrix = 1.0 - np.minimum(ratio1, ratio2)
         return bbox_cost_matrix
 
     #SORT’s IoU Cost Matrix
