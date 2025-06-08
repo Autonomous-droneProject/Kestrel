@@ -202,13 +202,15 @@ class DataAssociation:
         It calculates a combined cost based on the Intersection over Union (IoU), 
         Euclidean distance, and bounding box ratio metrics, using specified weights.
         '''
-        num_tracks = len(tracks)
-        num_detections = len(detections)
 
-        if num_tracks == 0 or num_detections == 0:
+        num_detections = len(detections)
+        num_tracks = len(tracks)
+        
+
+        if num_detections == 0 or num_tracks == 0:
             return np.array([]) #Return an empty array if there are no tracks or detections
 
-        cost_matrix = np.zeros((num_tracks, num_detections))
+        cost_matrix = np.zeros((num_detections, num_tracks))
 
         #Ensure the weights sum to 1.0
         sum_lambdas = lambda_iou + lambda_de + lambda_r
@@ -248,16 +250,16 @@ class DataAssociation:
         '''
         This function updates cost matrices based on the match between 
         predicted and detected object classes'''
-        num_tracks = cost_matrix.shape[0]
-        num_detections = cost_matrix.shape[1]
+        num_detections = cost_matrix.shape[0]
+        num_tracks = cost_matrix.shape[1]
 
         if num_tracks != (track_classes) or num_detections != len(detection_classes):
             raise ValueError("Dimensions of cost_matrix, track_classes, and detection_classes do not match - Class Gate Cost Matrix")
 
         #Create a boolean mask where classses match
         #             Reshapes to (num_tracks, 1)     Reshapes to (1, num_detections)
-        match_mask = (track_classes[:, None] == detection_classes[None, :]) #Shape = [num_tracks, num_detections]
-        #Because track_classes has the same number of columns as detection_classes has rows, we can perform matrix multiplication
+        match_mask = (detection_classes[:, None] == track_classes[None, :]) #Shape = [num_tracks, num_detections]
+        #Because detection_classes has the same number of rows as track_classes has columns, we can perform matrix multiplication
         
         #Apply the mask and keep the values where classes match, zero where they do not
         gated_cost_matrix = cost_matrix * match_mask
