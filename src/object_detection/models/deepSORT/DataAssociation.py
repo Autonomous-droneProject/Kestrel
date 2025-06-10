@@ -26,11 +26,10 @@ class DataAssociation:
 
         where (h, w) are the height and width of the input image.
         """
-        #Retrive lengths
-        tracks = np.array(tracks, copy=False)
-        detections = np.array(detections, copy=False)
-        N_detections = len(detections)
-        N_predictions = len(tracks)
+        #Retrieve lengths
+        tracks = np.array(tracks)
+        detections = np.array(detections)
+
         #Store bounding boxes centers for computation
         tracks_pos = tracks[:, 0:2]
         detections_pos = detections[:, 0:2]
@@ -80,14 +79,13 @@ class DataAssociation:
         bbox_cost_matrix = 1.0 - np.minimum(ratio1, ratio2)
         return bbox_cost_matrix
 
-      
-   #SORT’s IoU Cost Matrix
-    def iou_cost(tracks,detections):
-        
-        numDetections = len(detections)
-        numTracks = len(tracks)
-        
-        
+  
+    #SORT’s IoU Cost Matrix
+    def iou_cost(self,tracks,detections):
+
+        tracks = np.array(tracks)
+        detections = np.array(detections)
+
         det_x1 = detections[:, 0:1]
         det_y1 = detections[:, 1:2]
         det_x2 = det_x1 + detections[:, 2:3]
@@ -240,28 +238,18 @@ class DataAssociation:
         if num_tracks == 0 or num_detections == 0:
             return np.array([]) #Return an empty array if there are no tracks or detections
 
-        cost_iou = self.iou_cost(tracks,detections)
-        euclidean_cost = self.euclidean_cost(tracks, detections, image_dims)
-
-        # Get appearance features
-        det_feat = np.array([d.feature for d in detections])
-        trk_feat = np.array([t.feature for t in tracks])
-
-        # Normalize vectors
-        det_feat = det_feat / np.linalg.norm(det_feat, axis=1, keepdims=True)
-        trk_feat = trk_feat / np.linalg.norm(trk_feat, axis=1, keepdims=True)
-
-        # Compute cosine distance matrix (1 - cosine similarity)
-        cost_cosine = 1.0 - np.dot(det_feat, trk_feat.T)
+        cost_iou = self.iou_cost(tracks, detections)
+        cost_de = self.euclidean_cost(tracks, detections, image_dims)
+        cost_r = self.bbox_ratio_cost(tracks, detections)
 
         # Ensure all shapes match
-        if cost_iou.shape != euclidean_cost.shape or cost_iou.shape != cost_cosine.shape:
+        if not (cost_iou.shape == cost_de.shape == cost_r.shape):
             raise ValueError("Cost matrices are not aligned in shape.")
     
         #Final cost matrix
-        return (cost_iou + euclidean_cost + cost_cosine) / 3
+        return (cost_iou + cost_de + cost_r) / 3
     
-    
+
     #Element-wise Weighted Mean of Every Cost Matrix Value (𝑊𝑀(𝐷,𝑃))
     def weighted_mean_cost_matrix(self, tracks, detections, image_dims, lambda_iou=0.33, lambda_de=0.33, lambda_r=0.34):
         """
@@ -338,3 +326,39 @@ class DataAssociation:
         gated_cost_matrix = cost_matrix * match_mask
         
         return gated_cost_matrix
+
+if __name__ == "__main__":
+    assoc = DataAssociation()
+    np.set_printoptions(precision=2)
+
+    # Simple mock inputs
+    tracks = np.array([
+        [10, 10, 5, 5],
+        [30, 30, 10, 10]
+    ], dtype=np.float32)
+
+    detections = np.array([
+        [12, 12, 5, 5],
+        [32, 32, 10, 10]
+    ], dtype=np.float32)
+
+    image_dims = (100, 100)
+
+    euclidean_matrix = assoc.euclidean_cost(tracks, detections, image_dims)
+    print("Cost[0,1]:", euclidean_matrix[0,1])
+    print("Exact:", round(float(euclidean_matrix[0,1]), 10))
+    print(tracks.dtype, detections.dtype)
+
+
+    # Test each cost function
+    print("✅ Euclidean Cost Matrix:")
+    print(assoc.euclidean_cost(tracks, detections, image_dims))
+
+    print("\n✅ BBox Ratio Cost Matrix:")
+    print(assoc.bbox_ratio_cost(tracks, detections))
+
+    print("\n✅ IoU Cost Matrix:")
+    print(assoc.iou_cost(tracks, detections))
+
+    print("\n✅ Euclidean × BBox Ratio Cost Matrix:")
+    print(assoc.euclidean_bbox_ratio_cost(tracks, detections, image_dims))
