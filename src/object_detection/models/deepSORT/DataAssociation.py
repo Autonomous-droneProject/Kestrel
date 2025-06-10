@@ -80,13 +80,48 @@ class DataAssociation:
         bbox_cost_matrix = 1.0 - np.minimum(ratio1, ratio2)
         return bbox_cost_matrix
 
-    #SORT’s IoU Cost Matrix
-    def iou_cost(self, tracks, detections):
-        """
-        Computes the Intersection over Union (IoU) cost matrix between detections
-        and predictions. Lower values indicate better matches.
-        """
-        pass
+      
+   #SORT’s IoU Cost Matrix
+    def iou_cost(tracks,detections):
+        
+        numDetections = len(detections)
+        numTracks = len(tracks)
+        
+        
+        det_x1 = detections[:, 0:1]
+        det_y1 = detections[:, 1:2]
+        det_x2 = det_x1 + detections[:, 2:3]
+        det_y2 = det_y1 + detections[:, 3:4]
+
+        trk_x1 = tracks[:, 0].reshape(1,-1)
+        trk_y1 = tracks[:, 1].reshape(1,-1)
+        trk_x2 = trk_x1 + tracks[:, 2].reshape(1,-1)
+        trk_y2 = trk_y1 + tracks[:, 3].reshape(1,-1)
+            
+        detectionWidth = detections[:,2:3]
+        detectionHeight = detections[:,3:4]
+        
+               
+        areaDetection = detectionWidth * detectionHeight
+        areaTrack = tracks[:, 2].reshape(1, -1) * tracks[:, 3].reshape(1, -1)
+
+        inter_x1 = np.maximum(det_x1, trk_x1)
+        inter_y1 = np.maximum(det_y1, trk_y1)
+        inter_x2 = np.minimum(det_x2, trk_x2)
+        inter_y2 = np.minimum(det_y2, trk_y2)
+
+        inter_w = np.maximum(0.0, inter_x2 - inter_x1)
+        inter_h = np.maximum(0.0, inter_y2 - inter_y1)
+        
+ 
+        
+        "AoI = Area of Intersection, AoU = Area of Union"
+        AoI = inter_w * inter_h
+        AoU = areaDetection + areaTrack - AoI
+       
+        iou_matrix = np.where(AoU > 0, AoI / AoU, 0.0)
+       
+        return 1.0 - iou_matrix
 
     #   SORT’s IoU Cost Matrix Combined with the Euclidean Distance Cost Matrix (𝐸𝐼𝑜𝑈𝐷(𝐷,𝑃))
     def iou_euclidean_cost(self, tracks, detections, image_dims):
