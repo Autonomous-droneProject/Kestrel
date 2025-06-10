@@ -45,7 +45,7 @@ class DataAssociation:
         return euclidean_cost_matrix
 
     #Bounding Box Ratio Based Cost Matrix (𝑅(𝐷,𝑃))
-    def bbox_ratio_cost(self, tracks, detections):
+    def bbox_ratio_cost(tracks, detections):
         """
         Computes the bounding box ratio-based cost matrix (𝑅(𝐷,𝑃)), which is
         implemented as a ratio between the product of each width and height.
@@ -132,11 +132,8 @@ class DataAssociation:
         return cost_iou * cost_bbr  # Element-wise multiplication
    
 
-
-
-
     #Euclidean Distance Cost Matrix Combined with the Bounding Box Ratio Based Cost Matrix (𝑅𝐷𝐸(𝐷,𝑃))
-    def euclidean_bbox_ratio_cost(self, tracks, detections, image_dims):
+    def euclidean_bbox_ratio_cost(tracks, detections, image_dims):
         """
         Computes the Euclidean distance cost matrix combined with the bounding box
         ratio-based cost matrix using the Hadamard (element-wise) product:
@@ -145,20 +142,9 @@ class DataAssociation:
 
         where ∘ represents element-wise multiplication.
         """
-        num_tracks, num_detections = len(tracks), len(detections)
-        if num_detections == 0 or num_tracks == 0:
-            return np.array([])
-        
-        cost_de = np.asarray(self.euclidean_cost(tracks, detections, image_dims))
-        cost_r = np.asarray(self.bbox_ratio_cost(tracks, detections))
+        pass
 
-        if np.shape(cost_de) != np.shape(cost_r):
-            raise ValueError("Euclidean cost matrix and bbox ratio cost matrix are of different shapes")
-
-        # performs element-wise multiplication
-        cost_rde = np.multiply(cost_de, cost_r)
-        return cost_rde
-
+      
     #Step 7: SORT's IoU Cost Matrix Combined with the Euclidean Distance Cost Matrix and the Bounding Box Ratio Based Cost Matrix (𝑀(𝐷,𝑃))
     def combined_cost_matrix(self, tracks, detections, image_dims):
         """
@@ -194,7 +180,6 @@ class DataAssociation:
         return combined_matrix
     
         
-
     #Element-wise Average of Every Cost Matrix (𝐴(𝐷,𝑃))
     def average_cost_matrix(self, tracks, detections, image_dims):
         """
@@ -202,8 +187,34 @@ class DataAssociation:
 
         A(Di, Pi) = (IoU(Di, Pj) + DE(Di, Pj) + R(Di, Pj)) / 3,  for i ∈ D, j ∈ P
         """
-        pass
+        num_tracks = len(tracks)
+        num_detections = len(detections)
 
+        if num_tracks == 0 or num_detections == 0:
+            return np.array([]) #Return an empty array if there are no tracks or detections
+
+        cost_iou = self.iou_cost(tracks,detections)
+        euclidean_cost = self.euclidean_cost(tracks, detections, image_dims)
+
+        # Get appearance features
+        det_feat = np.array([d.feature for d in detections])
+        trk_feat = np.array([t.feature for t in tracks])
+
+        # Normalize vectors
+        det_feat = det_feat / np.linalg.norm(det_feat, axis=1, keepdims=True)
+        trk_feat = trk_feat / np.linalg.norm(trk_feat, axis=1, keepdims=True)
+
+        # Compute cosine distance matrix (1 - cosine similarity)
+        cost_cosine = 1.0 - np.dot(det_feat, trk_feat.T)
+
+        # Ensure all shapes match
+        if cost_iou.shape != euclidean_cost.shape or cost_iou.shape != cost_cosine.shape:
+            raise ValueError("Cost matrices are not aligned in shape.")
+    
+        #Final cost matrix
+        return (cost_iou + euclidean_cost + cost_cosine) / 3
+    
+    
     #Element-wise Weighted Mean of Every Cost Matrix Value (𝑊𝑀(𝐷,𝑃))
     def weighted_mean_cost_matrix(self, tracks, detections, image_dims, lambda_iou=0.33, lambda_de=0.33, lambda_r=0.34):
         """
@@ -217,7 +228,6 @@ class DataAssociation:
         It calculates a combined cost based on the Intersection over Union (IoU), 
         Euclidean distance, and bounding box ratio metrics, using specified weights.
         '''
-
         num_detections = len(detections)
         num_tracks = len(tracks)
         
@@ -251,7 +261,7 @@ class DataAssociation:
         
         return cost_matrix
 
-
+      
     #Class Gate Update Based on Object Class Match (𝐶∗(𝐷,𝑃))
     def class_gate_cost_matrix(self, cost_matrix, track_classes, detection_classes):
         """
@@ -265,6 +275,7 @@ class DataAssociation:
         '''
         This function updates cost matrices based on the match between 
         predicted and detected object classes'''
+        
         num_detections = cost_matrix.shape[0]
         num_tracks = cost_matrix.shape[1]
 
