@@ -31,8 +31,9 @@ class DataAssociation:
         detections = np.array(detections)
 
         #Store bounding boxes centers for computation
-        tracks_pos = tracks[:, 0:2]
-        detections_pos = detections[:, 0:2]
+        tracks_pos = tracks[:, 0:2] + tracks[:, 2:4] / 2.0  # (T, 2) - Center of each track
+        detections_pos = detections[:, 0:2] + detections[:, 2:4] / 2.0  # (D, 2) - Center of each detection
+
         #Calculate norm based off image size
         norm = 0.5 * np.sqrt(image_dims[0]**2 + image_dims[1]**2)
         #Subtract so u_Di - u_Pi & v_Di - v_Pi
@@ -345,20 +346,24 @@ if __name__ == "__main__":
     image_dims = (100, 100)
 
     euclidean_matrix = assoc.euclidean_cost(tracks, detections, image_dims)
+    print("Cost[0,0]:", euclidean_matrix[0,0])
     print("Cost[0,1]:", euclidean_matrix[0,1])
-    print("Exact:", round(float(euclidean_matrix[0,1]), 10))
-    print(tracks.dtype, detections.dtype)
+    # print("Exact:", round(float(euclidean_matrix[0,0]), 10))
+    # print(tracks.dtype, detections.dtype)
+
+    # print("euclidean_cost_matrix type:", type(euclidean_matrix))
+    # print("shape:", euclidean_matrix.shape)
 
 
-    # Test each cost function
-    print("✅ Euclidean Cost Matrix:")
-    print(assoc.euclidean_cost(tracks, detections, image_dims))
+    # # Test each cost function
+    # print("✅ Euclidean Cost Matrix:")
+    # print(assoc.euclidean_cost(tracks, detections, image_dims))
 
-    print("\n✅ BBox Ratio Cost Matrix:")
-    print(assoc.bbox_ratio_cost(tracks, detections))
+    # print("\n✅ BBox Ratio Cost Matrix:")
+    # print(assoc.bbox_ratio_cost(tracks, detections))
 
-    print("\n✅ IoU Cost Matrix:")
-    print(assoc.iou_cost(tracks, detections))
+    # print("\n✅ IoU Cost Matrix:")
+    # print(assoc.iou_cost(tracks, detections))
 
-    print("\n✅ Euclidean × BBox Ratio Cost Matrix:")
-    print(assoc.euclidean_bbox_ratio_cost(tracks, detections, image_dims))
+    # print("\n✅ Euclidean × BBox Ratio Cost Matrix:")
+    # print(assoc.euclidean_bbox_ratio_cost(tracks, detections, image_dims))
