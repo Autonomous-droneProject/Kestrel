@@ -150,3 +150,7 @@ cython_debug/
 # These files are used for debugging within VS Code
 Docker/launch.json
 Docker/tasks.json
+
+# AutoCAD Electrical
+.dwl
+.dwl2
