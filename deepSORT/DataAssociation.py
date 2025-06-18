@@ -339,19 +339,19 @@ if __name__ == "__main__":
     # Simple mock inputs
     tracks = np.array([
         [10, 10, 5, 5],
-        [30, 30, 10, 10]
+        [20, 20, 5, 5]
     ], dtype=np.float32)
 
     detections = np.array([
-        [12, 12, 5, 5],
-        [32, 32, 10, 10]
+        [10, 10, 5, 5],
+        [20, 20, 5, 5]
     ], dtype=np.float32)
 
     image_dims = (100, 100)
 
     euclidean_matrix = assoc.euclidean_cost(tracks, detections, image_dims)
-    print("Cost[0,0]:", euclidean_matrix[0,0])
-    print("Cost[0,1]:", euclidean_matrix[0,1])
+    # print("Cost[0,0]:", euclidean_matrix[0,0])
+    # print("Cost[0,1]:", euclidean_matrix[0,1])
     # print("Exact:", round(float(euclidean_matrix[0,0]), 10))
     # print(tracks.dtype, detections.dtype)
 
@@ -359,15 +359,24 @@ if __name__ == "__main__":
     # print("shape:", euclidean_matrix.shape)
 
 
-    # # Test each cost function
-    # print("✅ Euclidean Cost Matrix:")
-    # print(assoc.euclidean_cost(tracks, detections, image_dims))
+    # Test each cost function
+    print("✅ Euclidean Cost Matrix:")
+    print(assoc.euclidean_cost(tracks, detections, image_dims))
 
-    # print("\n✅ BBox Ratio Cost Matrix:")
-    # print(assoc.bbox_ratio_cost(tracks, detections))
+    print("\n✅ BBox Ratio Cost Matrix:")
+    print(assoc.bbox_ratio_cost(tracks, detections))
 
-    # print("\n✅ IoU Cost Matrix:")
-    # print(assoc.iou_cost(tracks, detections))
+    print("\n✅ IoU Cost Matrix:")
+    print(assoc.iou_cost(tracks, detections))
 
-    # print("\n✅ Euclidean × BBox Ratio Cost Matrix:")
-    # print(assoc.euclidean_bbox_ratio_cost(tracks, detections, image_dims))
+    print("\n✅ IOU × Euclidean Cost Matrix:")
+    print(assoc.iou_euclidean_cost(tracks, detections, image_dims))
+
+    print("\n✅ IOU × BBox Ratio Cost Matrix:")
+    print(assoc.iou_bbox_ratio_cost(tracks, detections))
+
+    print("\n✅ Euclidean × BBox Ratio Cost Matrix:")
+    print(assoc.euclidean_bbox_ratio_cost(tracks, detections, image_dims))
+
+    print("\n✅ Average Cost Matrix:")
+    print(assoc.average_cost_matrix(tracks, detections, image_dims))
