@@ -1,0 +1,1116 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+    <model name='kestrel_drone_lidar'>
+        <include>
+            <uri>model://kestrel_drone</uri>
+        </include>
+
+        <!-- lidar 1: 45 down-forward-left  -->
+        <link name="45dfl">
+            <pose relative_to="45dfl-joint">0 0 0 0 0 0</pose>
+            <inertial>
+                <mass>0.1</mass>
+                <inertia>
+                    <ixx>0.000166667</ixx>
+                    <iyy>0.000166667</iyy>
+                    <izz>0.000166667</izz>
+                </inertia>
+            </inertial>
+            <collision name="collision">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+                <material>
+                    <diffuse>1 1 1 0</diffuse>
+                    <ambient>1 1 1 0</ambient>
+                    <specular>1 1 1 0</specular>
+                </material>
+            </visual>
+            <sensor name='gpu_lidar' type='gpu_lidar'>
+                <topic>lidar/45dfl</topic>
+                <update_rate>10</update_rate>
+                <lidar>
+                    <scan>
+                    <horizontal>
+                        <samples>640</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </horizontal>
+                    <vertical>
+                        <samples>16</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </vertical>
+                    </scan>
+                    <range>
+                    <min>0.08</min>
+                    <max>4.0</max>
+                    <resolution>0.01</resolution>
+                    </range>
+                </lidar>
+                <visualize>true</visualize>
+            </sensor>
+        </link>
+        <joint name="45dfl-joint" type="fixed">
+            <pose relative_to="kestrel_drone::base_link">
+                0.0739 0.0734 0 0 0.785398 0.785398
+            </pose>
+            <parent>kestrel_drone::base_link</parent>
+            <child>45dfl</child>
+        </joint>
+
+        <!-- Lidar 2: forward -->
+        <link name="forward">
+            <pose relative_to="forward-joint">0 0 0 0 0 0</pose>
+            <inertial>
+                <mass>0.1</mass>
+                <inertia>
+                    <ixx>0.000166667</ixx>
+                    <iyy>0.000166667</iyy>
+                    <izz>0.000166667</izz>
+                </inertia>
+            </inertial>
+            <collision name="collision">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+                <material>
+                    <diffuse>1 1 1 0</diffuse>
+                    <ambient>1 1 1 0</ambient>
+                    <specular>1 1 1 0</specular>
+                </material>
+            </visual>
+            <sensor name='gpu_lidar' type='gpu_lidar'>
+                <topic>lidar/forward</topic>
+                <update_rate>10</update_rate>
+                <lidar>
+                    <scan>
+                    <horizontal>
+                        <samples>640</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </horizontal>
+                    <vertical>
+                        <samples>16</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </vertical>
+                    </scan>
+                    <range>
+                    <min>0.08</min>
+                    <max>4.0</max>
+                    <resolution>0.01</resolution>
+                    </range>
+                </lidar>
+                <visualize>true</visualize>
+            </sensor>
+        </link>
+        <joint name="forward-joint" type="fixed">
+            <pose relative_to="kestrel_drone::base_link">
+                0.1294	0.0004	0.0012 0 0 0
+            </pose>
+            <parent>kestrel_drone::base_link</parent>
+            <child>forward</child>
+        </joint>
+
+        <!-- Lidar 3: 45 down-forward-right -->
+        <link name="45dfr">
+            <pose relative_to="45dfr-joint">0 0 0 0 0 0</pose>
+            <inertial>
+                <mass>0.1</mass>
+                <inertia>
+                    <ixx>0.000166667</ixx>
+                    <iyy>0.000166667</iyy>
+                    <izz>0.000166667</izz>
+                </inertia>
+            </inertial>
+            <collision name="collision">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+                <material>
+                    <diffuse>1 1 1 0</diffuse>
+                    <ambient>1 1 1 0</ambient>
+                    <specular>1 1 1 0</specular>
+                </material>
+            </visual>
+            <sensor name='gpu_lidar' type='gpu_lidar'>
+                <topic>lidar/45dfr</topic>
+                <update_rate>10</update_rate>
+                <lidar>
+                    <scan>
+                    <horizontal>
+                        <samples>640</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </horizontal>
+                    <vertical>
+                        <samples>16</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </vertical>
+                    </scan>
+                    <range>
+                    <min>0.08</min>
+                    <max>4.0</max>
+                    <resolution>0.01</resolution>
+                    </range>
+                </lidar>
+                <visualize>true</visualize>
+            </sensor>
+        </link>
+        <joint name="45dfr-joint" type="fixed">
+            <pose relative_to="kestrel_drone::base_link">
+                0.0730	-0.0735	0 0 0.785398 -0.785398
+            </pose>
+            <parent>kestrel_drone::base_link</parent>
+            <child>45dfr</child>
+        </joint>
+
+        <!-- Lidar 4: Right -->
+        <link name="right">
+            <pose relative_to="right-joint">0 0 0 0 0 0</pose>
+            <inertial>
+                <mass>0.1</mass>
+                <inertia>
+                    <ixx>0.000166667</ixx>
+                    <iyy>0.000166667</iyy>
+                    <izz>0.000166667</izz>
+                </inertia>
+            </inertial>
+            <collision name="collision">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+                <material>
+                    <diffuse>1 1 1 0</diffuse>
+                    <ambient>1 1 1 0</ambient>
+                    <specular>1 1 1 0</specular>
+                </material>
+            </visual>
+            <sensor name='gpu_lidar' type='gpu_lidar'>
+                <topic>lidar/right</topic>
+                <update_rate>10</update_rate>
+                <lidar>
+                    <scan>
+                    <horizontal>
+                        <samples>640</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </horizontal>
+                    <vertical>
+                        <samples>16</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </vertical>
+                    </scan>
+                    <range>
+                    <min>0.08</min>
+                    <max>4.0</max>
+                    <resolution>0.01</resolution>
+                    </range>
+                </lidar>
+                <visualize>true</visualize>
+            </sensor>
+        </link>
+        <joint name="right-joint" type="fixed">
+            <pose relative_to="kestrel_drone::base_link">
+                0 -0.0810 0.0011 0 0 -1.570796
+            </pose>
+            <parent>kestrel_drone::base_link</parent>
+            <child>right</child>
+        </joint>
+
+        <!-- Lidar 5: 45 down-rear-right -->
+        <link name="45drr">
+            <pose relative_to="45drr-joint">0 0 0 0 0 0</pose>
+            <inertial>
+                <mass>0.1</mass>
+                <inertia>
+                    <ixx>0.000166667</ixx>
+                    <iyy>0.000166667</iyy>
+                    <izz>0.000166667</izz>
+                </inertia>
+            </inertial>
+            <collision name="collision">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+                <material>
+                    <diffuse>1 1 1 0</diffuse>
+                    <ambient>1 1 1 0</ambient>
+                    <specular>1 1 1 0</specular>
+                </material>
+            </visual>
+            <sensor name='gpu_lidar' type='gpu_lidar'>
+                <topic>lidar/45drr</topic>
+                <update_rate>10</update_rate>
+                <lidar>
+                    <scan>
+                    <horizontal>
+                        <samples>640</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </horizontal>
+                    <vertical>
+                        <samples>16</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </vertical>
+                    </scan>
+                    <range>
+                    <min>0.08</min>
+                    <max>4.0</max>
+                    <resolution>0.01</resolution>
+                    </range>
+                </lidar>
+                <visualize>true</visualize>
+            </sensor>
+        </link>
+        <joint name="45drr-joint" type="fixed">
+            <pose relative_to="kestrel_drone::base_link">
+                -0.0739	-0.0726	0 0 2.35619 0.785398
+            </pose>
+            <parent>kestrel_drone::base_link</parent>
+            <child>45drr</child>
+        </joint>
+
+        <!-- Lidar 6: Rear -->
+        <link name="rear">
+            <pose relative_to="rear-joint">0 0 0 0 0 0</pose>
+            <inertial>
+                <mass>0.1</mass>
+                <inertia>
+                    <ixx>0.000166667</ixx>
+                    <iyy>0.000166667</iyy>
+                    <izz>0.000166667</izz>
+                </inertia>
+            </inertial>
+            <collision name="collision">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+                <material>
+                    <diffuse>1 1 1 0</diffuse>
+                    <ambient>1 1 1 0</ambient>
+                    <specular>1 1 1 0</specular>
+                </material>
+            </visual>
+            <sensor name='gpu_lidar' type='gpu_lidar'>
+                <topic>lidar/rear</topic>
+                <update_rate>10</update_rate>
+                <lidar>
+                    <scan>
+                    <horizontal>
+                        <samples>640</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </horizontal>
+                    <vertical>
+                        <samples>16</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </vertical>
+                    </scan>
+                    <range>
+                    <min>0.08</min>
+                    <max>4.0</max>
+                    <resolution>0.01</resolution>
+                    </range>
+                </lidar>
+                <visualize>true</visualize>
+            </sensor>
+        </link>
+        <joint name="rear-joint" type="fixed">
+            <pose relative_to="kestrel_drone::base_link">
+                -0.1264	0.0004	0.0012 0 0 3.14159
+            </pose>
+            <parent>kestrel_drone::base_link</parent>
+            <child>rear</child>
+        </joint>
+
+        <!-- Lidar 7: 45 down-rear-left -->
+        <link name="45drl">
+            <pose relative_to="45drl-joint">0 0 0 0 0 0</pose>
+            <inertial>
+                <mass>0.1</mass>
+                <inertia>
+                    <ixx>0.000166667</ixx>
+                    <iyy>0.000166667</iyy>
+                    <izz>0.000166667</izz>
+                </inertia>
+            </inertial>
+            <collision name="collision">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+                <material>
+                    <diffuse>1 1 1 0</diffuse>
+                    <ambient>1 1 1 0</ambient>
+                    <specular>1 1 1 0</specular>
+                </material>
+            </visual>
+            <sensor name='gpu_lidar' type='gpu_lidar'>
+                <topic>lidar/45drl</topic>
+                <update_rate>10</update_rate>
+                <lidar>
+                    <scan>
+                    <horizontal>
+                        <samples>640</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </horizontal>
+                    <vertical>
+                        <samples>16</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </vertical>
+                    </scan>
+                    <range>
+                    <min>0.08</min>
+                    <max>4.0</max>
+                    <resolution>0.01</resolution>
+                    </range>
+                </lidar>
+                <visualize>true</visualize>
+            </sensor>
+        </link>
+        <joint name="45drl-joint" type="fixed">
+            <pose relative_to="kestrel_drone::base_link">
+                -0.0730	0.0743	0 0 2.35619 -0.785398
+            </pose>
+            <parent>kestrel_drone::base_link</parent>
+            <child>45drl</child>
+        </joint>
+
+        <!-- Lidar 8: Left -->
+        <link name="left">
+            <pose relative_to="left-joint">0 0 0 0 0 0</pose>
+            <inertial>
+                <mass>0.1</mass>
+                <inertia>
+                    <ixx>0.000166667</ixx>
+                    <iyy>0.000166667</iyy>
+                    <izz>0.000166667</izz>
+                </inertia>
+            </inertial>
+            <collision name="collision">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+                <material>
+                    <diffuse>1 1 1 0</diffuse>
+                    <ambient>1 1 1 0</ambient>
+                    <specular>1 1 1 0</specular>
+                </material>
+            </visual>
+            <sensor name='gpu_lidar' type='gpu_lidar'>
+                <topic>lidar/left</topic>
+                <update_rate>10</update_rate>
+                <lidar>
+                    <scan>
+                    <horizontal>
+                        <samples>640</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </horizontal>
+                    <vertical>
+                        <samples>16</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </vertical>
+                    </scan>
+                    <range>
+                    <min>0.08</min>
+                    <max>4.0</max>
+                    <resolution>0.01</resolution>
+                    </range>
+                </lidar>
+                <visualize>true</visualize>
+            </sensor>
+        </link>
+        <joint name="left-joint" type="fixed">
+            <pose relative_to="kestrel_drone::base_link">
+                0.0000	0.0789	0.0011 0 0 1.570796
+            </pose>
+            <parent>kestrel_drone::base_link</parent>
+            <child>left</child>
+        </joint>
+
+        <!-- Lidar 9: Down -->
+        <link name="down">
+            <pose relative_to="down-joint">0 0 0 0 0 0</pose>
+            <inertial>
+                <mass>0.1</mass>
+                <inertia>
+                    <ixx>0.000166667</ixx>
+                    <iyy>0.000166667</iyy>
+                    <izz>0.000166667</izz>
+                </inertia>
+            </inertial>
+            <collision name="collision">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+                <material>
+                    <diffuse>1 1 1 0</diffuse>
+                    <ambient>1 1 1 0</ambient>
+                    <specular>1 1 1 0</specular>
+                </material>
+            </visual>
+            <sensor name='gpu_lidar' type='gpu_lidar'>
+                <topic>lidar/down</topic>
+                <update_rate>10</update_rate>
+                <lidar>
+                    <scan>
+                    <horizontal>
+                        <samples>640</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </horizontal>
+                    <vertical>
+                        <samples>16</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </vertical>
+                    </scan>
+                    <range>
+                    <min>0.08</min>
+                    <max>4.0</max>
+                    <resolution>0.01</resolution>
+                    </range>
+                </lidar>
+                <visualize>true</visualize>
+            </sensor>
+        </link>
+        <joint name="down-joint" type="fixed">
+            <pose relative_to="kestrel_drone::base_link">
+                -0.1154	0.0004	-0.0186 0 1.5708 0
+            </pose>
+            <parent>kestrel_drone::base_link</parent>
+            <child>down</child>
+        </joint>
+
+        <!-- Lidar 10: 45 up-forward-right -->
+        <link name="45ufr">
+            <pose relative_to="45ufr-joint">0 0 0 0 0 0</pose>
+            <inertial>
+                <mass>0.1</mass>
+                <inertia>
+                    <ixx>0.000166667</ixx>
+                    <iyy>0.000166667</iyy>
+                    <izz>0.000166667</izz>
+                </inertia>
+            </inertial>
+            <collision name="collision">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+                <material>
+                    <diffuse>1 1 1 0</diffuse>
+                    <ambient>1 1 1 0</ambient>
+                    <specular>1 1 1 0</specular>
+                </material>
+            </visual>
+            <sensor name='gpu_lidar' type='gpu_lidar'>
+                <topic>lidar/45ufr</topic>
+                <update_rate>10</update_rate>
+                <lidar>
+                    <scan>
+                    <horizontal>
+                        <samples>640</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </horizontal>
+                    <vertical>
+                        <samples>16</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </vertical>
+                    </scan>
+                    <range>
+                    <min>0.08</min>
+                    <max>4.0</max>
+                    <resolution>0.01</resolution>
+                    </range>
+                </lidar>
+                <visualize>true</visualize>
+            </sensor>
+        </link>
+        <joint name="45ufr-joint" type="fixed">
+            <pose relative_to="kestrel_drone::base_link">
+                0.0411	-0.0415	0.0580 0 -0.785398 -0.785398
+            </pose>
+            <parent>kestrel_drone::base_link</parent>
+            <child>45ufr</child>
+        </joint>
+
+        <!-- Lidar 11: Up -->
+        <link name="up">
+            <pose relative_to="up-joint">0 0 0 0 0 0</pose>
+            <inertial>
+                <mass>0.1</mass>
+                <inertia>
+                    <ixx>0.000166667</ixx>
+                    <iyy>0.000166667</iyy>
+                    <izz>0.000166667</izz>
+                </inertia>
+            </inertial>
+            <collision name="collision">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+                <material>
+                    <diffuse>1 1 1 0</diffuse>
+                    <ambient>1 1 1 0</ambient>
+                    <specular>1 1 1 0</specular>
+                </material>
+            </visual>
+            <sensor name='gpu_lidar' type='gpu_lidar'>
+                <topic>lidar/up</topic>
+                <update_rate>10</update_rate>
+                <lidar>
+                    <scan>
+                    <horizontal>
+                        <samples>640</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </horizontal>
+                    <vertical>
+                        <samples>16</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </vertical>
+                    </scan>
+                    <range>
+                    <min>0.08</min>
+                    <max>4.0</max>
+                    <resolution>0.01</resolution>
+                    </range>
+                </lidar>
+                <visualize>true</visualize>
+            </sensor>
+        </link>
+        <joint name="up-joint" type="fixed">
+            <pose relative_to="kestrel_drone::base_link">
+                0.0653 -0.0001 0.0466 0 -1.5708 0
+            </pose>
+            <parent>kestrel_drone::base_link</parent>
+            <child>up</child>
+        </joint>
+
+        <!-- Lidar 12: 45 up-forward-left -->
+        <link name="45ufl">
+            <pose relative_to="45ufl-joint">0 0 0 0 0 0</pose>
+            <inertial>
+                <mass>0.1</mass>
+                <inertia>
+                    <ixx>0.000166667</ixx>
+                    <iyy>0.000166667</iyy>
+                    <izz>0.000166667</izz>
+                </inertia>
+            </inertial>
+            <collision name="collision">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+                <material>
+                    <diffuse>1 1 1 0</diffuse>
+                    <ambient>1 1 1 0</ambient>
+                    <specular>1 1 1 0</specular>
+                </material>
+            </visual>
+            <sensor name='gpu_lidar' type='gpu_lidar'>
+                <topic>lidar/45ufl</topic>
+                <update_rate>10</update_rate>
+                <lidar>
+                    <scan>
+                    <horizontal>
+                        <samples>640</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </horizontal>
+                    <vertical>
+                        <samples>16</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </vertical>
+                    </scan>
+                    <range>
+                    <min>0.08</min>
+                    <max>4.0</max>
+                    <resolution>0.01</resolution>
+                    </range>
+                </lidar>
+                <visualize>true</visualize>
+            </sensor>
+        </link>
+        <joint name="45ufl-joint" type="fixed">
+            <pose relative_to="kestrel_drone::base_link">
+                0.0424	0.0415	0.0580 0 -0.785398 0.785398
+            </pose>
+            <parent>kestrel_drone::base_link</parent>
+            <child>45ufl</child>
+        </joint>
+
+        <!-- Lidar 13: 45 up-rear-left -->
+        <link name="45url">
+            <pose relative_to="45url-joint">0 0 0 0 0 0</pose>
+            <inertial>
+                <mass>0.1</mass>
+                <inertia>
+                    <ixx>0.000166667</ixx>
+                    <iyy>0.000166667</iyy>
+                    <izz>0.000166667</izz>
+                </inertia>
+            </inertial>
+            <collision name="collision">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+                <material>
+                    <diffuse>1 1 1 0</diffuse>
+                    <ambient>1 1 1 0</ambient>
+                    <specular>1 1 1 0</specular>
+                </material>
+            </visual>
+            <sensor name='gpu_lidar' type='gpu_lidar'>
+                <topic>lidar/45url</topic>
+                <update_rate>10</update_rate>
+                <lidar>
+                    <scan>
+                    <horizontal>
+                        <samples>640</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </horizontal>
+                    <vertical>
+                        <samples>16</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </vertical>
+                    </scan>
+                    <range>
+                    <min>0.08</min>
+                    <max>4.0</max>
+                    <resolution>0.01</resolution>
+                    </range>
+                </lidar>
+                <visualize>true</visualize>
+            </sensor>
+        </link>
+        <joint name="45url-joint" type="fixed">
+            <pose relative_to="kestrel_drone::base_link">
+                -0.0411	0.0429	0.0580 0 -2.35619 -0.785398
+            </pose>
+            <parent>kestrel_drone::base_link</parent>
+            <child>45url</child>
+        </joint>
+
+        <!-- Lidar 14: 45 up-rear-right -->
+        <link name="45urr">
+            <pose relative_to="45urr-joint">0 0 0 0 0 0</pose>
+            <inertial>
+                <mass>0.1</mass>
+                <inertia>
+                    <ixx>0.000166667</ixx>
+                    <iyy>0.000166667</iyy>
+                    <izz>0.000166667</izz>
+                </inertia>
+            </inertial>
+            <collision name="collision">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+                <material>
+                    <diffuse>1 1 1 0</diffuse>
+                    <ambient>1 1 1 0</ambient>
+                    <specular>1 1 1 0</specular>
+                </material>
+            </visual>
+            <sensor name='gpu_lidar' type='gpu_lidar'>
+                <topic>lidar/45urr</topic>
+                <update_rate>10</update_rate>
+                <lidar>
+                    <scan>
+                    <horizontal>
+                        <samples>640</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </horizontal>
+                    <vertical>
+                        <samples>16</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.471239</min_angle>
+                        <max_angle>0.471239</max_angle>
+                    </vertical>
+                    </scan>
+                    <range>
+                    <min>0.08</min>
+                    <max>4.0</max>
+                    <resolution>0.01</resolution>
+                    </range>
+                </lidar>
+                <visualize>true</visualize>
+            </sensor>
+        </link>
+        <joint name="45urr-joint" type="fixed">
+            <pose relative_to="kestrel_drone::base_link">
+                -0.0424	-0.0406	0.0580 0 -2.35619 0.785398
+            </pose>
+            <parent>kestrel_drone::base_link</parent>
+            <child>45urr</child>
+        </joint>
+
+        <!-- Lidar 15: Forward long range -->
+        <link name="forwardl">
+            <pose relative_to="forwardl-joint">0 0 0 0 0 0</pose>
+            <inertial>
+                <mass>0.1</mass>
+                <inertia>
+                    <ixx>0.000166667</ixx>
+                    <iyy>0.000166667</iyy>
+                    <izz>0.000166667</izz>
+                </inertia>
+            </inertial>
+            <collision name="collision">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+                <material>
+                    <diffuse>1 1 1 0</diffuse>
+                    <ambient>1 1 1 0</ambient>
+                    <specular>1 1 1 0</specular>
+                </material>
+            </visual>
+            <sensor name='gpu_lidar' type='gpu_lidar'>
+                <topic>lidar/forwardl</topic>
+                <update_rate>10</update_rate>
+                <lidar>
+                    <scan>
+                    <horizontal>
+                        <samples>640</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.0349066</min_angle>
+                        <max_angle>0.0349066</max_angle>
+                    </horizontal>
+                    <vertical>
+                        <samples>16</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.0349066</min_angle>
+                        <max_angle>0.0349066</max_angle>
+                    </vertical>
+                    </scan>
+                    <range>
+                    <min>0.08</min>
+                    <max>8.0</max>
+                    <resolution>0.01</resolution>
+                    </range>
+                </lidar>
+                <visualize>true</visualize>
+            </sensor>
+        </link>
+        <joint name="forwardl-joint" type="fixed">
+            <pose relative_to="kestrel_drone::base_link">
+                0.0866	-0.0001	0.0339 0 0 0
+            </pose>
+            <parent>kestrel_drone::base_link</parent>
+            <child>forwardl</child>
+        </joint>
+
+        <!-- Lidar 16: 45 down-forward-right(long) -->
+        <link name="45dfrl">
+            <pose relative_to="45dfrl-joint">0 0 0 0 0 0</pose>
+            <inertial>
+                <mass>0.1</mass>
+                <inertia>
+                    <ixx>0.000166667</ixx>
+                    <iyy>0.000166667</iyy>
+                    <izz>0.000166667</izz>
+                </inertia>
+            </inertial>
+            <collision name="collision">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+                <material>
+                    <diffuse>1 1 1 0</diffuse>
+                    <ambient>1 1 1 0</ambient>
+                    <specular>1 1 1 0</specular>
+                </material>
+            </visual>
+            <sensor name='gpu_lidar' type='gpu_lidar'>
+                <topic>lidar/45dfrl</topic>
+                <update_rate>10</update_rate>
+                <lidar>
+                    <scan>
+                    <horizontal>
+                        <samples>640</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.0349066</min_angle>
+                        <max_angle>0.0349066</max_angle>
+                    </horizontal>
+                    <vertical>
+                        <samples>16</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.0349066</min_angle>
+                        <max_angle>0.0349066</max_angle>
+                    </vertical>
+                    </scan>
+                    <range>
+                    <min>0.08</min>
+                    <max>8.0</max>
+                    <resolution>0.01</resolution>
+                    </range>
+                </lidar>
+                <visualize>true</visualize>
+            </sensor>
+        </link>
+        <joint name="45dfrl-joint" type="fixed">
+            <pose relative_to="kestrel_drone::base_link">
+               0.1482	-0.1484	-0.0366 0 0.785398 -0.785398
+            </pose>
+            <parent>kestrel_drone::base_link</parent>
+            <child>45dfrl</child>
+        </joint>
+
+        <!-- Lidar 16: 45 down-forward-left(long) -->
+        <link name="45dfrll">
+            <pose relative_to="45dfrll-joint">0 0 0 0 0 0</pose>
+            <inertial>
+                <mass>0.1</mass>
+                <inertia>
+                    <ixx>0.000166667</ixx>
+                    <iyy>0.000166667</iyy>
+                    <izz>0.000166667</izz>
+                </inertia>
+            </inertial>
+            <collision name="collision">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <box>
+                    <size>0.01 0.01 0.01</size>
+                    </box>
+                </geometry>
+                <material>
+                    <diffuse>1 1 1 0</diffuse>
+                    <ambient>1 1 1 0</ambient>
+                    <specular>1 1 1 0</specular>
+                </material>
+            </visual>
+            <sensor name='gpu_lidar' type='gpu_lidar'>
+                <topic>lidar/45dfrll</topic>
+                <update_rate>10</update_rate>
+                <lidar>
+                    <scan>
+                    <horizontal>
+                        <samples>640</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.0349066</min_angle>
+                        <max_angle>0.0349066</max_angle>
+                    </horizontal>
+                    <vertical>
+                        <samples>16</samples>
+                        <resolution>1</resolution>
+                        <min_angle>-0.0349066</min_angle>
+                        <max_angle>0.0349066</max_angle>
+                    </vertical>
+                    </scan>
+                    <range>
+                    <min>0.08</min>
+                    <max>8.0</max>
+                    <resolution>0.01</resolution>
+                    </range>
+                </lidar>
+                <visualize>true</visualize>
+            </sensor>
+        </link>
+        <joint name="45dfrll-joint" type="fixed">
+            <pose relative_to="kestrel_drone::base_link">
+               0.1488	0.1487	-0.0366 0 0.785398 0.785398
+            </pose>
+            <parent>kestrel_drone::base_link</parent>
+            <child>45dfrll</child>
+        </joint>
+
+        
+
+    </model>
+</sdf>
