@@ -2,6 +2,11 @@
 By integrating advanced computer vision, machine learning, and robotics frameworks, the project aims to push the boundaries of what autonomous aerial systems can achieve in dynamic environments.
 **We plan to follow a group of Person Electric Vehicle Riders**, going at an approximate speed of **30mph**, while maintaining autonomous control for a **15-minute flight duration**.
 
+### Install
+```
+git clone --recurse-submodules https://github.com/Autonomous-droneProject/Kestrel.git
+```
+
 ### Key Features:
 - **Target Tracking:**
    - Uses object detection (YOLO) and multi-object tracking (DeepSORT) to follow a designated subject in real time.
