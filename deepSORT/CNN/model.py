@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 class CNNdeepSORT(nn.Module):
 
-    def __init__(self, embedding_dim):
+    def __init__(self, embedding_dim, number_classes):
         super(CNNdeepSORT, self).__init__()
         
         
@@ -33,14 +33,14 @@ class CNNdeepSORT(nn.Module):
         )
 
         
-        self.linearLayer = nn.Linear(in_features = embedding_dim, out_features=embedding_dim)
+        self.classifier = nn.Linear(in_features = embedding_dim, out_features=number_classes)
         
     def forward(self, inputTensor):
         
         output = self.convolution(inputTensor)
         output = torch.flatten(output,1)
         #After Flatenning: [B, 128] -> person's appearance vector 
-        output = self.linearLayer(output)
+        output = self.classifier(output)
         
         return output
     
