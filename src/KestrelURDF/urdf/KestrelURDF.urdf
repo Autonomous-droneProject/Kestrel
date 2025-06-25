@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="KestrelURDF">
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="0.739500868307654 0.910559872876914 1.29376036749626"
+        rpy="0 0 0" />
+      <mass
+        value="0.735760542636533" />
+      <inertia
+        ixx="0.00548898530780651"
+        ixy="-0.000185533639752651"
+        ixz="-7.03163940720585E-06"
+        iyy="0.00987067533675419"
+        iyz="-1.19854626006522E-06"
+        izz="0.00666910293672226" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://KestrelURDF/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://KestrelURDF/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="CameraPt1">
+    <inertial>
+      <origin
+        xyz="0.0990404015692381 0.0580747612832986 0.0187090478702636"
+        rpy="0 0 0" />
+      <mass
+        value="0.735760542636533" />
+      <inertia
+        ixx="0.0055335402575296"
+        ixy="-0.000181980136171852"
+        ixz="-0.000225043067059608"
+        iyy="0.00987067533675419"
+        iyz="-3.6157959454016E-05"
+        izz="0.00662454798699917" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://KestrelURDF/meshes/CameraPt1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://KestrelURDF/meshes/CameraPt1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="CameraPt1"
+    type="revolute">
+    <origin
+      xyz="0.63871 -1.2941 0.85249"
+      rpy="1.5708 0 0.18968" />
+    <parent
+      link="base_link" />
+    <child
+      link="CameraPt1" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="0"
+      upper="3.1415"
+      effort="1.471"
+      velocity="5.236" />
+    <safety_controller
+      soft_upper_limit="3.1415"
+      soft_lower_limit="0"
+      k_velocity="0" />
+  </joint>
+  <link
+    name="CameraPt2">
+    <inertial>
+      <origin
+        xyz="0.095173 0.076334 0.017899"
+        rpy="0 0 0" />
+      <mass
+        value="0.73576" />
+      <inertia
+        ixx="0.0058726"
+        ixy="-0.0011831"
+        ixz="-0.00015492"
+        iyy="0.0095171"
+        iyz="-0.00024261"
+        izz="0.006639" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://KestrelURDF/meshes/CameraPt2.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://KestrelURDF/meshes/CameraPt2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="CameraPt2"
+    type="revolute">
+    <origin
+      xyz="-0.011599 0.0079 -0.0024281"
+      rpy="0.050421 0.0061613 -0.24314" />
+    <parent
+      link="CameraPt1" />
+    <child
+      link="CameraPt2" />
+    <axis
+      xyz="0.2049 0 -0.97878" />
+    <limit
+      lower="-1.5708"
+      upper="0"
+      effort="1.571"
+      velocity="5.236" />
+    <safety_controller
+      soft_upper_limit="0"
+      soft_lower_limit="-1.5708"
+      k_velocity="0" />
+  </joint>
+</robot>
