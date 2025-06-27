@@ -162,3 +162,4 @@ Docker/tasks.json
 # Vscode
 .vscode/settings.json
 build_log.txt
+.vscode/settings.json
