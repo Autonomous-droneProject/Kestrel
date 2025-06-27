@@ -4,6 +4,6 @@
 [submodule "src/mavros"]
 	path = src/mavros
 	url = https://github.com/Autonomous-droneProject/mavros.git
-[submodule "src/kestrel_stack/ROS2-VL53L1X"]
-	path = src/kestrel_stack/ROS2-VL53L1X
+[submodule "src/ROS2-VL53L1X"]
+	path = src/ROS2-VL53L1X
 	url = https://github.com/Autonomous-droneProject/ROS2-VL53L1X.git
