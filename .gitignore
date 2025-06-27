@@ -158,3 +158,6 @@ Docker/tasks.json
 # AutoCAD Electrical
 .dwl
 .dwl2
+
+# Vscode
+.vscode/
