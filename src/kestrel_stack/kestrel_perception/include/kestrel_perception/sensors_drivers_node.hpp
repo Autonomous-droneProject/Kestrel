@@ -4,7 +4,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "tca9548a/srv/select_channel.hpp"
 #include "sensor_msgs/msg/range.hpp"
-#include "vl53l1x/include/vl53l1x.h" // From slaghuis/ROS2-VL53L1X package
+#include "vl53l1x/vl53l1x.hpp" // From slaghuis/ROS2-VL53L1X package
 
 #include <memory>
 #include <vector>
