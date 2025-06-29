@@ -160,6 +160,4 @@ Docker/tasks.json
 .dwl2
 
 # Vscode
-.vscode/settings.json
-build_log.txt
-.vscode/settings.json
+# .vscode/
