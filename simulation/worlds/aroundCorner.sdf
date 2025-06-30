@@ -130,7 +130,7 @@
       <collision name="collision">
         <geometry>
           <box>
-            <size>6 6 4</size>
+            <size>6 6 9</size>
           </box>
         </geometry>
       </collision>
@@ -138,7 +138,7 @@
       <visual name="visual">
         <geometry>
           <box>
-            <size>6 6 6</size>
+            <size>6 6 9</size>
           </box>
         </geometry>
       </visual>
