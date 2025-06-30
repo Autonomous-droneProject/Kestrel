@@ -1,0 +1,164 @@
+/kestrel_perception:
+  ros__parameters:
+    num_sensors: 19
+    i2c_bus: "/dev/i2c-1"
+    vl53l1x_address: 0x29
+    publish_rate: 10.0
+    sensor_configurations:
+
+      # ok so like all the calibration settings r set to 0.0 for now
+      # edit the values once u have the calibration data for each sensor
+      # the distance mode is set to "long" for all sensors, change it if needed
+      
+      # sensor 0
+      - sensor_id: 0
+        topic_name: "vl53l1x/range_0"
+        frame_id: "vl53l1x_link_0"
+        calibration:
+          offset: 0.0
+          crosstalk: 0.0
+          distance_mode: "long"
+      # sensor 1
+      - sensor_id: 1
+        topic_name: "vl53l1x/range_1"
+        frame_id: "vl53l1x_link_1"
+        calibration:
+          offset: 0.0
+          crosstalk: 0.0
+          distance_mode: "long"
+      # sensor 2
+      - sensor_id: 2
+        topic_name: "vl53l1x/range_2"
+        frame_id: "vl53l1x_link_2"
+        calibration:
+          offset: 0.0
+          crosstalk: 0.0
+          distance_mode: "long"
+      # sensor 3
+      - sensor_id: 3
+        topic_name: "vl53l1x/range_3"
+        frame_id: "vl53l1x_link_3"
+        calibration:
+          offset: 0.0
+          crosstalk: 0.0
+          distance_mode: "long"
+      # sensor 4
+      - sensor_id: 4
+        topic_name: "vl53l1x/range_4"
+        frame_id: "vl53l1x_link_4"
+        calibration:
+          offset: 0.0
+          crosstalk: 0.0
+          distance_mode: "long"
+      # sensor 5
+      - sensor_id: 5
+        topic_name: "vl53l1x/range_5"
+        frame_id: "vl53l1x_link_5"
+        calibration:
+          offset: 0.0
+          crosstalk: 0.0
+          distance_mode: "long"
+      # sensor 6
+      - sensor_id: 6
+        topic_name: "vl53l1x/range_6"
+        frame_id: "vl53l1x_link_6"
+        calibration:
+          offset: 0.0
+          crosstalk: 0.0
+          distance_mode: "long"
+      # sensor 7
+      - sensor_id: 7
+        topic_name: "vl53l1x/range_7"
+        frame_id: "vl53l1x_link_7"
+        calibration:
+          offset: 0.0
+          crosstalk: 0.0
+          distance_mode: "long"
+      # sensor 8
+      - sensor_id: 8
+        topic_name: "vl53l1x/range_8"
+        frame_id: "vl53l1x_link_8"
+        calibration:
+          offset: 0.0
+          crosstalk: 0.0
+          distance_mode: "long"
+      # sensor 9
+      - sensor_id: 9
+        topic_name: "vl53l1x/range_9"
+        frame_id: "vl53l1x_link_9"
+        calibration:
+          offset: 0.0
+          crosstalk: 0.0
+          distance_mode: "long"
+      # sensor 10
+      - sensor_id: 10
+        topic_name: "vl53l1x/range_10"
+        frame_id: "vl53l1x_link_10"
+        calibration:
+          offset: 0.0
+          crosstalk: 0.0
+          distance_mode: "long"
+      # Sensor 11
+      - sensor_id: 11
+        topic_name: "vl53l1x/range_11"
+        frame_id: "vl53l1x_link_11"
+        calibration:
+          offset: 0.0
+          crosstalk: 0.0
+          distance_mode: "long"
+      # sensor 12
+      - sensor_id: 12
+        topic_name: "vl53l1x/range_12"
+        frame_id: "vl53l1x_link_12"
+        calibration:
+          offset: 0.0
+          crosstalk: 0.0
+          distance_mode: "long"
+      # sensor 13
+      - sensor_id: 13
+        topic_name: "vl53l1x/range_13"
+        frame_id: "vl53l1x_link_13"
+        calibration:
+          offset: 0.0
+          crosstalk: 0.0
+          distance_mode: "long"
+      # sensor 14
+      - sensor_id: 14
+        topic_name: "vl53l1x/range_14"
+        frame_id: "vl53l1x_link_14"
+        calibration:
+          offset: 0.0
+          crosstalk: 0.0
+          distance_mode: "long"
+      # sensor 15
+      - sensor_id: 15
+        topic_name: "vl53l1x/range_15"
+        frame_id: "vl53l1x_link_15"
+        calibration:
+          offset: 0.0
+          crosstalk: 0.0
+          distance_mode: "long"
+      # sensor 16
+      - sensor_id: 16
+        topic_name: "vl53l1x/range_16"
+        frame_id: "vl53l1x_link_16"
+        calibration:
+          offset: 0.0
+          crosstalk: 0.0
+          distance_mode: "long"
+      # sensor 17
+      - sensor_id: 17
+        topic_name: "vl53l1x/range_17"
+        frame_id: "vl53l1x_link_17"
+        calibration:
+          offset: 0.0
+          crosstalk: 0.0
+          distance_mode: "long"
+      # sensor 18
+      - sensor_id: 18
+        topic_name: "vl53l1x/range_18"
+        frame_id: "vl53l1x_link_18"
+        calibration:
+          offset: 0.0
+          crosstalk: 0.0
+          distance_mode: "long"
