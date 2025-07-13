@@ -4,45 +4,42 @@ import torch.nn.functional as F
 
 class CNNdeepSORT(nn.Module):
 
-    def __init__(self, embedding_dim, number_classes):
-        super(CNNdeepSORT, self).__init__()
+    def __init__(self, embedding_dim, num_classes):
+        super().__init__()
         
-        
-        chan1 = embedding_dim//4
-        chan2 = embedding_dim//2
         self.convolution = nn.Sequential(
             #Input Dimensions: [B, 3, H, W]
             #inChannels= 3 (RGB), outChannels = embedding_dim/4 (out being # of kernels)
             
-            nn.Conv2d(in_channels=3, out_channels=chan1, kernel_size=3),
-            nn.BatchNorm2d(chan1),
-            nn.ReLU(True),
-                    
-            
-            nn.Conv2d(in_channels=chan1, out_channels=chan2, kernel_size=3),
-            nn.BatchNorm2d(chan2),
-            nn.ReLU(True),
-            
-            nn.Conv2d(in_channels=chan2, out_channels=embedding_dim, kernel_size=3),
-            nn.BatchNorm2d(embedding_dim),
-            nn.ReLU(True),
+            # Stage 1
+            nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, padding=1), nn.BatchNorm2d(64), nn.ReLU(True), # without padding, convolution shrinks images quickly, potentially losing info @ edges.
+            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, padding=1), nn.BatchNorm2d(64), nn.ReLU(True),
+            nn.MaxPool2d(2), #downsample using maxmimum values in kernel -> H/2 x W/2
 
+            # Stage 2
+            nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding=1), nn.BatchNorm2d(128), nn.ReLU(True),
+            nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, padding=1), nn.BatchNorm2d(128), nn.ReLU(True),
+            nn.MaxPool2d(2), # H/2 x W/2
+
+            # Stage 3
+            nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, padding=1), nn.BatchNorm2d(256), nn.ReLU(True),
+            nn.Conv2d(in_channels=256, out_channels=embedding_dim, kernel_size=3, padding=1), nn.BatchNorm2d(embedding_dim), nn.ReLU(True),
             
-            nn.AdaptiveAvgPool2d((1,1))
-            #After pooling: [B, 128, 1, 1]
+            #Final reduction later into 1x1 embedding: [B, embedding_dim, 1, 1]
+            nn.AdaptiveAvgPool2d((1,1)) 
         )
 
+        # Fully connected classifier for Re-ID training
+        self.classifier = nn.Linear(in_features = embedding_dim, out_features=num_classes)
         
-        self.classifier = nn.Linear(in_features = embedding_dim, out_features=number_classes)
+    def forward(self, inputTensor, return_embedding=False):
         
-    def forward(self, inputTensor):
-        
-        output = self.convolution(inputTensor)
-        output = torch.flatten(output,1)
-        #After Flatenning: [B, 128] -> person's appearance vector 
-        output = self.classifier(output)
-        
-        return output
+        output = self.convolution(inputTensor)  # CNN encoder block -> [B, emb_dim, 1, 1]
+        output = torch.flatten(output,1)        # [B, emb_dim] -> person's appearance vector 
+        if not return_embedding:
+            output = self.classifier(output)   # For use as classifier -> [B, num_classes]
+        # else: For use as feature extractor        
+        return output 
     
 
 

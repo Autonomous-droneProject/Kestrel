@@ -1,8 +1,10 @@
 import os
+import sys
 import time
 import torch
 import torch.nn as nn
 import torchvision
+from datetime import datetime
 from torchvision import transforms
 from tqdm import tqdm
 from torch.utils.data import DataLoader
@@ -59,14 +61,15 @@ def training(model, dataloader, loss_fn, optimizer, device):
 
 # This code will only run when you execute `python train.py` directly
 if __name__ == '__main__':
-    # Initialize TensorBoard writer with a specific run name
-    writer = SummaryWriter('runs/market1501_experiment_1')
-
     # Hyperparameters
     LEARNING_RATE = 1e-3
     EPOCHS = 50
     BATCH_SIZE = 128 # e.g. 32, 64, 128
     # Increased from 64. AMP frees memory, and more data per step = fewer GPU idles
+
+    # Initialize TensorBoard writer with a specific run name
+    run_name = f"market1501_B{BATCH_SIZE}_LR{LEARNING_RATE}_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+    writer = SummaryWriter(log_dir=os.path.join('runs', run_name))  
 
     # Move the model to the appropriate device (GPU if available)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -85,7 +88,7 @@ if __name__ == '__main__':
 
     # Instantiate the model and move to device
     # 751 is the number of classes for Market-1501
-    model = CNNdeepSORT(embedding_dim=128, number_classes=751).to(device)
+    model = CNNdeepSORT(embedding_dim=128, num_classes=751).to(device)
 
     # Define loss function, optimizer, and learning rate scheduler
     loss_function = nn.CrossEntropyLoss() # Cross Entropy Loss is simpler, so more suitable for validation
@@ -93,6 +96,26 @@ if __name__ == '__main__':
 
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1) # Decays LR by a factor of 0.1 every 10 epochs
     # Gamma of 0.1 is common -- sharp reduction in LR, allowing model to switch from large adjustments to fine-tuning
+
+    # Load from saved checkpoint if found (most generalized model)
+    checkpoint_path = 'best_model_checkpoint.pth'
+    start_epoch = 0
+    if(len(sys.argv) > 1 and sys.argv[1].lower() == "load"):
+        if(os.path.exists(checkpoint_path)):
+            print(f"Loading checkpoint from {checkpoint_path}...")
+            checkpoint = torch.load(checkpoint_path)
+            model.load_state_dict(checkpoint['model_state_dict'])
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+            scaler.load_state_dict(checkpoint.get('scaler_state_dict', {}))
+            start_epoch = checkpoint['epoch'] + 1
+            print(f"Resumed at epoch {start_epoch} | val_loss={checkpoint['loss']:.4f}")
+        else:
+            print("No checkpoint found, starting from scratch.")
+    else:
+        print("Training from scratch...")
+    
+    writer.add_text("Run Info", f"Resumed from epoch {start_epoch}" if start_epoch > 0 else "Training from scratch")
 
     # ---------------------------------------------------
     # 3. DATA LOADING & SMALL VALIDATION SPLIT
@@ -189,7 +212,7 @@ if __name__ == '__main__':
     patience = 5
     patience_counter = 0
 
-    for epoch in range(EPOCHS):
+    for epoch in range(start_epoch, EPOCHS):
         start_time = time.time()
 
         # Train for one epoch
@@ -235,6 +258,7 @@ if __name__ == '__main__':
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
             'scheduler_state_dict': scheduler.state_dict(),
+            'scaler_state_dict': scaler.state_dict(),
             'loss': avg_loss
         }, 'latest_model_checkpoint_epoch.pth')
         
