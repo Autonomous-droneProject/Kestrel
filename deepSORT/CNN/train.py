@@ -11,8 +11,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data import random_split
 from torch.utils.tensorboard import SummaryWriter
 from torch.amp import autocast, GradScaler      # instead of torch.cuda.amp -- deprecated
-
-
+from torch.nn import TripletMarginWithDistanceLoss
 # Custom Modules
 import dataset 
 from model import CNNdeepSORT
@@ -20,6 +19,8 @@ from model import CNNdeepSORT
 # ---------------------------------------------------
 # TRAINING FUNCTION
 # ---------------------------------------------------
+def euclidean_distance(x, y):
+    return torch.norm(x - y, p=2, dim=1)
 
 def training(model, dataloader, loss_fn, optimizer, device):
     model.train() # Set model to training mode
@@ -28,15 +29,19 @@ def training(model, dataloader, loss_fn, optimizer, device):
     total_samples = 0
     progress_bar = tqdm(dataloader, "Training Progress...", unit = "batch")
 
-    for (image, label) in progress_bar:
-        image, label = image.to(device, non_blocking = True), label.to(device, non_blocking = True) 
+    for (archor, positive, negative) in progress_bar:
+        anchor.to(device, non_blocking=True)
+        positive = positive.to(device, non_blocking=True)
+        negative = negative.to(device, non_blocking=True)
         # Non_blocking lets compute overlap with data transfer (small but free speed-up). Launches host --> GPU copy async if tensor already pinned (it is)
 
-        # Forward pass
         with autocast(device_type=device):
-            prediction = model(image) #Forward propagation
-            loss = loss_fn(prediction, label) #Find out how wrong we were
-        
+            anchor_out = model(anchor)
+            positive_out = model(positive)
+            negative_out = model(negative)
+
+            loss = loss_fn(anchor_out, positive_out, negative_out)
+
         # Backward pass and optimization
         scaler.scale(loss).backward()       # 1. Calculate gradients based on the current loss.
         torch.nn.utils.clip_grad_norm_(model.parameters(), clip_val) # Compues total L2 norm for all gradients. If exceeds `clip_val`, rescales them to be equal. Prevents gradient explosion.
@@ -46,8 +51,10 @@ def training(model, dataloader, loss_fn, optimizer, device):
         
         # Metrics
         total_loss += loss.item()
-        total_correct += (prediction.argmax(1) == label).sum().item()
-        total_samples += label.size(0)
+        d_ap = euclidean_distance(anchor_out, positive_out)
+        d_an = euclidean_distance(anchor_out, negative_out)
+        total_correct += (d_ap < d_an).sum().item()
+        total_samples += anchor.size(0)
 
         progress_bar.set_postfix(loss=loss.item())
     
@@ -66,10 +73,7 @@ if __name__ == '__main__':
     EPOCHS = 50
     BATCH_SIZE = 128 # e.g. 32, 64, 128
     # Increased from 64. AMP frees memory, and more data per step = fewer GPU idles
-
-    # Initialize TensorBoard writer with a specific run name
-    run_name = f"market1501_B{BATCH_SIZE}_LR{LEARNING_RATE}_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
-    writer = SummaryWriter(log_dir=os.path.join('runs', run_name))  
+    
 
     # Move the model to the appropriate device (GPU if available)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -88,10 +92,13 @@ if __name__ == '__main__':
 
     # Instantiate the model and move to device
     # 751 is the number of classes for Market-1501
-    model = CNNdeepSORT(embedding_dim=128, num_classes=751).to(device)
+    model = CNNdeepSORT(embedding_dim=128).to(device)
 
     # Define loss function, optimizer, and learning rate scheduler
-    loss_function = nn.CrossEntropyLoss() # Cross Entropy Loss is simpler, so more suitable for validation
+
+    #TODO distance function, margin depends on distance choosen 
+
+    loss_function = nn.TripletMarginWithDistanceLoss(distance_function=euclidean_distance, margin=0.3, swap = True ) # Cross Entropy Loss is simpler, so more suitable for validation
     optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE) # AdamW is an upgraded version of Adam
 
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.1) # Decays LR by a factor of 0.1 every 10 epochs
@@ -115,8 +122,9 @@ if __name__ == '__main__':
     else:
         print("Training from scratch...")
     
-    writer.add_text("Run Info", f"Resumed from epoch {start_epoch}" if start_epoch > 0 else "Training from scratch")
+    #TODO
 
+    
     # ---------------------------------------------------
     # 3. DATA LOADING & SMALL VALIDATION SPLIT
     # ---------------------------------------------------
@@ -174,17 +182,28 @@ if __name__ == '__main__':
         correct    = 0
         samples    = 0
 
-        for imgs, lbls in loader:
-            imgs = imgs.to(device, non_blocking=True)
-            lbls = lbls.to(device, non_blocking=True)
+        for anchor, positive, negative in loader:
+            anchor = anchor.to(device, non_blocking=True)
+            positive = positive.to(device, non_blocking=True)
+            negative = negative.to(device, non_blocking=True)
 
             with autocast(device_type=device):             # AMP even in eval -> less VRAM, faster
-                logits = model(imgs)
-                loss   = loss_function(logits, lbls)
+                anchor_out = model(anchor)
+                positive_out = model(positive)
+                negative_out = model(negative)
+
+
+
+
+                loss   = loss_function(anchor_out, positive_out, negative_out)
 
             total_loss += loss.item()
-            correct    += (logits.argmax(1) == lbls).sum().item()
-            samples    += lbls.size(0)
+            #TODO 
+            d_ap = euclidean_distance(anchor_out, positive_out)
+            d_an = euclidean_distance(anchor_out, negative_out)
+            correct += (d_ap < d_an).sum().item()
+
+            samples    += anchor.size(0)
 
         mean_loss = total_loss / len(loader)
         accuracy  = correct / samples
@@ -197,12 +216,8 @@ if __name__ == '__main__':
 
     print("Logging model graph and sample images to TensorBoard...")
     # Get a single batch from the dataloader to log graph and images
-    images, labels = next(iter(training_dataloader))
-    grid = torchvision.utils.make_grid(images)
+    anchor, positibe, negative = next(iter(training_dataloader))
 
-    writer.add_image('Sample Training Images', grid)
-    # Ensure the model and input tensor are on the same device for add_graph
-    writer.add_graph(model, images.to(device))
     print("Done.")
 
     # ---------------------------------------------------
@@ -222,13 +237,7 @@ if __name__ == '__main__':
         #*NEW* Update the learning rate
         scheduler.step() # Without this, the model is unable to converge.
 
-        # --- TENSORBOARD LOGGING (Per Epoch) ---
-        writer.add_scalar('Loss/train', avg_loss, epoch)
-        writer.add_scalar('Accuracy/train', accuracy, epoch)
-        writer.add_scalar('Learning Rate', optimizer.param_groups[0]['lr'], epoch)
-        
-        writer.add_scalar("Loss/val", val_loss, epoch)
-        writer.add_scalar("Accuracy/val", val_acc, epoch)
+       
 
         # ----- save best on *validation* loss -----
         #if avg_loss < best_val_loss:
@@ -268,7 +277,7 @@ if __name__ == '__main__':
             break
 
         # Log weight histograms
-        writer.add_histogram('fc.weight', model.classifier.weight, epoch)
+       
 
     print("\nTraining Finished!")
 
@@ -277,8 +286,7 @@ if __name__ == '__main__':
     # 7. CLEANUP
     # ---------------------------------------------------
 
-    # Close the TensorBoard writer
-    writer.close()
+
 
     # To view the logs, open a terminal in your project's root directory and run:
-    # tensorboard --logdir=runs
+    # tensorboard --logdir=run

@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 class CNNdeepSORT(nn.Module):
 
-    def __init__(self, embedding_dim, num_classes):
+    def __init__(self, embedding_dim):
         super().__init__()
         
         self.convolution = nn.Sequential(
@@ -30,17 +30,13 @@ class CNNdeepSORT(nn.Module):
         )
 
         # Fully connected classifier for Re-ID training
-        self.classifier = nn.Linear(in_features = embedding_dim, out_features=num_classes)
+        #self.classifier = nn.Linear(in_features = embedding_dim, out_features=num_classes)
         
-    def forward(self, inputTensor, return_embedding=False):
+    def forward(self, inputTensor):
         
         output = self.convolution(inputTensor)  # CNN encoder block -> [B, emb_dim, 1, 1]
         output = torch.flatten(output,1)        # [B, emb_dim] -> person's appearance vector 
-        if not return_embedding:
-            output = self.classifier(output)   # For use as classifier -> [B, num_classes]
-        # else: For use as feature extractor        
-        return output 
-    
-
-
         
+        output = self.classifier(output)   # For use as classifier -> [B, num_classes]
+        # else: For use as feature extractor        
+        return output
