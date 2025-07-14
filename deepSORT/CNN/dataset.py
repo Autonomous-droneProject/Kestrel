@@ -2,6 +2,7 @@ import os
 import torch
 from torch.utils.data import Dataset  # The base class we will inherit from to create our custom dataset
 from PIL import Image  # Python Imaging Library (Pillow), used for opening and manipulating image files
+import pickle
 
 class Market1501(Dataset):
     """
@@ -79,3 +80,63 @@ class Market1501(Dataset):
         # Return the total count of the image paths we found during initialization.
         return len(self.image_paths)
             
+
+
+
+class AG_VPReID(Dataset):
+    def __init__(self, root_dir, transform=None, cache_file = "AG_VPReid.pkl"):
+        self.samples = [] # (frame_path, label)
+        self.transform = transform
+        self.cache_file = os.path.join(root_dir, cache_file)
+
+        if os.path.exists(self.cache_file):
+            print(f"[Cache] Loading samples from {self.cache_file}")
+            with open(self.cache_file, "rb") as f:
+                self.samples = pickle.load(f)
+        else:
+            print("[Cache] Building sample list...")
+            self._load_paths(root_dir)
+            print(f"[Cache] Saving to {self.cache_file}")
+            with open(self.cache_file, "wb") as f:
+                pickle.dump(self.samples, f)
+
+    
+    def _load_paths(self, root_dir): #The underscore in this method name is just a convention to show that it is only meant to be called internally, not from objects of this class
+        #All directories within the root
+        directories_list = os.listdir(root_dir)
+
+        #For all images within the list of directories
+        for person_ID in sorted(directories_list):
+            #Build a full path to the image directory
+            person_path = os.path.join(root_dir, person_ID)
+
+            for tracklet in os.listdir(person_path):
+                #Build a full path to each tracklet
+                tracklet_path = os.path.join(person_path, tracklet)
+
+                for frame in os.listdir(tracklet_path):
+                    #Build a full path to each frame
+                    frame_path = os.path.join(tracklet_path, frame)
+                    self.samples.append((frame_path, int(person_ID))) #Store the person ID as an int So now we have each image and ID
+    
+    def __getitem__(self, index):
+        #Extract the values from the list of tuples
+        frame_path, label = self.samples[index]
+        #Open the image and convert it to RGB
+        image = Image.open(frame_path).convert("RGB")
+
+        if self.transform:
+            image = self.transform(image)
+
+        return image,label
+
+            
+    def __len__(self):
+        return len(self.samples)
+
+# C:\Users\adamm\Documents\PROJECTS\Kestrel\Kestrel\deepSORT\CNN\train
+# deepSORT\CNN\train
+root_dir = r'deepSORT\CNN\train'
+dataset = AG_VPReID(root_dir)
+
+
