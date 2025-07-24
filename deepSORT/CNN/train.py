@@ -117,7 +117,7 @@ def run_epoch(model, dataloader, optimizer, scaler, clip_val, device, is_trainin
     model.train() if is_training else model.eval()
 
     total_loss, total_correct, total_samples = 0., 0., 0
-    progress_bar = tqdm(dataloader, f"{'Training' if is_training else 'Evaluating'}...", unit = "batch")
+    progress_bar = tqdm(dataloader, f"{'Training' if is_training else 'Evaluating'}...", unit="batch")
 
     for (images, labels) in progress_bar:
         # Move to device
@@ -314,7 +314,7 @@ if __name__ == '__main__':
         avg_loss, accuracy = run_epoch(model, training_dataloader, optimizer, scaler, clip_val, device, is_training=True) #tells you if optimizer is doing its job on the data it sees
         val_loss, val_acc = run_epoch(model, val_loader, optimizer=None, scaler=None, clip_val=None, device=device, is_training=False) #tells you if the network is generalizing; early stopping
 
-        #*NEW* Update the learning rate
+        # Update the learning rate
         scheduler.step() # Without this, the model is unable to converge.
 
         # --- TENSORBOARD LOGGING (Per Epoch) ---
