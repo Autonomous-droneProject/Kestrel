@@ -9,6 +9,8 @@ import numpy as np
 from scipy.optimize import linear_sum_assignment
 from custom_msgs.msg import TrackArray, Track
 from typing import List, Tuple
+from numpy.linalg import inv
+from scipy.stats import chi2
 import cv2 
 import json 
 
@@ -25,9 +27,26 @@ def bbox2state(bbox):
     cy = y1 + h / 2
     return np.array([cx, cy, w, h])
 
-def mahalanobis_gate(track_state, det_state, covariance, thresh):
+def mahalanobis_gate(kalmanFilter, det_state, covariance, thresh):
     """Return True if Mahalanobis distance < thresh."""
-    # TODO: implement distance = sqrt((d - μ)^T Σ^{-1} (d - μ))
+    #Replaced track_State with kalmanFilter
+    #What we are passing as covariance will be the innovation covariance which is S (S = H*P*H^T + R), should be calculate in measurement matrix, if not will need to do here
+    
+    # I can just implement it in here *so its subject to change but for now ima add it as a parameter, same thing with S I think it should be calculated in measurement matrix
+
+    #Convert raw bbox into z (actual measurement)
+    z= bbox2state(det_state).reshape(4,1)
+    
+    H = kalmanFilter.H
+    x = kalmanFilter.x
+    
+    z_hat = H @ x 
+    y = z - z_hat
+    #Due to gating taking the squared Mahalanobis Distance is considered better and standard practice then using the normal Distance
+    distance_squared = float(y.T @ np.linalg.inv(covariance) @ y)
+    
+
+    return distance_squared < thresh
 
 def build_cost_matrix(tracks, detections, w_motion, w_app):
     """Combine motion & appearance costs into an (N×M) matrix."""
