@@ -1,0 +1,4 @@
+/kestrel_perception/clustering_node:
+  ros__parameters:
+    epsilon: 0.5  # meters
+    min_points: 5
