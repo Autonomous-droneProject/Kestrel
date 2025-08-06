@@ -1,4 +1,7 @@
-# Empty request
----
+# Service to retrieve the latest system health status.
 
-# Empty response
+# Request (should be empty)
+---
+# Response
+# Returns the complete system health message
+kestrel_msgs/SystemHealth system_health
