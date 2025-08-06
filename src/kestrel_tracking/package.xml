@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>kestrel_tracking</name>
+  <version>0.1.0</version>
+  <description>Real-time object tracking node for Kestrel using DeepSORT and vision_msgs</description>
+  <maintainer email="da364739@ucf.edu">David Orjuela</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>vision_msgs</exec_depend>
+  <exec_depend>kestrel_msgs</exec_depend>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

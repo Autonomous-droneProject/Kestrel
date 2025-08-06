@@ -1,0 +1,11 @@
+# Minimal Placeholder for build
+# Goal
+int32 dummy_goal
+---
+
+# Result
+bool dummy_result
+---
+
+# Feedback
+float32 dummy_feedback
