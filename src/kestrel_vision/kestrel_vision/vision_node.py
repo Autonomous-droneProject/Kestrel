@@ -16,11 +16,8 @@ import torch
 from cv_bridge import CvBridge
 from ultralytics import YOLO
 
-# we have to do this so python can find the paths
-kestrel_root = Path(__file__).resolve().parents[4]
-sys.path.append(str(kestrel_root))
 
-from deepSORT.CNN.model import CNNdeepSORT
+from model import CNNdeepSORT
 from . import processing
 
 
