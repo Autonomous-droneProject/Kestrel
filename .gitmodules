@@ -10,3 +10,6 @@
 [submodule "src/driver/tca9548a"]
 	path = src/driver/tca9548a
 	url = https://github.com/Autonomous-droneProject/ros2_tca9548a.git
+[submodule "docs/KestrelAssembly"]
+	path = docs/KestrelAssembly
+	url = https://github.com/Autonomous-droneProject/KestrelAssembly.git

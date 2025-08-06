@@ -58,6 +58,11 @@
                     <max>4.0</max>
                     <resolution>0.01</resolution>
                     </range>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.1</stddev>
+                    </noise>
                 </lidar>
                 <visualize>true</visualize>
             </sensor>
@@ -123,6 +128,11 @@
                     <max>4.0</max>
                     <resolution>0.01</resolution>
                     </range>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.1</stddev>
+                    </noise>
                 </lidar>
                 <visualize>true</visualize>
             </sensor>
@@ -188,6 +198,11 @@
                     <max>4.0</max>
                     <resolution>0.01</resolution>
                     </range>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.1</stddev>
+                    </noise>
                 </lidar>
                 <visualize>true</visualize>
             </sensor>
@@ -253,6 +268,11 @@
                     <max>4.0</max>
                     <resolution>0.01</resolution>
                     </range>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.1</stddev>
+                    </noise>
                 </lidar>
                 <visualize>true</visualize>
             </sensor>
@@ -318,6 +338,11 @@
                     <max>4.0</max>
                     <resolution>0.01</resolution>
                     </range>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.1</stddev>
+                    </noise>
                 </lidar>
                 <visualize>true</visualize>
             </sensor>
@@ -383,6 +408,11 @@
                     <max>4.0</max>
                     <resolution>0.01</resolution>
                     </range>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.1</stddev>
+                    </noise>
                 </lidar>
                 <visualize>true</visualize>
             </sensor>
@@ -448,6 +478,11 @@
                     <max>4.0</max>
                     <resolution>0.01</resolution>
                     </range>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.1</stddev>
+                    </noise>
                 </lidar>
                 <visualize>true</visualize>
             </sensor>
@@ -513,6 +548,11 @@
                     <max>4.0</max>
                     <resolution>0.01</resolution>
                     </range>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.1</stddev>
+                    </noise>
                 </lidar>
                 <visualize>true</visualize>
             </sensor>
@@ -578,6 +618,11 @@
                     <max>4.0</max>
                     <resolution>0.01</resolution>
                     </range>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.1</stddev>
+                    </noise>
                 </lidar>
                 <visualize>true</visualize>
             </sensor>
@@ -643,6 +688,11 @@
                     <max>4.0</max>
                     <resolution>0.01</resolution>
                     </range>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.1</stddev>
+                    </noise>
                 </lidar>
                 <visualize>true</visualize>
             </sensor>
@@ -708,6 +758,11 @@
                     <max>4.0</max>
                     <resolution>0.01</resolution>
                     </range>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.1</stddev>
+                    </noise>
                 </lidar>
                 <visualize>true</visualize>
             </sensor>
@@ -773,6 +828,11 @@
                     <max>4.0</max>
                     <resolution>0.01</resolution>
                     </range>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.1</stddev>
+                    </noise>
                 </lidar>
                 <visualize>true</visualize>
             </sensor>
@@ -838,6 +898,11 @@
                     <max>4.0</max>
                     <resolution>0.01</resolution>
                     </range>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.1</stddev>
+                    </noise>
                 </lidar>
                 <visualize>true</visualize>
             </sensor>
@@ -903,6 +968,11 @@
                     <max>4.0</max>
                     <resolution>0.01</resolution>
                     </range>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.1</stddev>
+                    </noise>
                 </lidar>
                 <visualize>true</visualize>
             </sensor>
@@ -968,6 +1038,11 @@
                     <max>8.0</max>
                     <resolution>0.01</resolution>
                     </range>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.1</stddev>
+                    </noise>
                 </lidar>
                 <visualize>true</visualize>
             </sensor>
@@ -1033,6 +1108,11 @@
                     <max>8.0</max>
                     <resolution>0.01</resolution>
                     </range>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.1</stddev>
+                    </noise>
                 </lidar>
                 <visualize>true</visualize>
             </sensor>
@@ -1098,6 +1178,11 @@
                     <max>8.0</max>
                     <resolution>0.01</resolution>
                     </range>
+                    <noise>
+                        <type>gaussian</type>
+                        <mean>0.0</mean>
+                        <stddev>0.1</stddev>
+                    </noise>
                 </lidar>
                 <visualize>true</visualize>
             </sensor>
