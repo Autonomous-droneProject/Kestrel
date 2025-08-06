@@ -1,0 +1,9 @@
+[submodule "src/mavlink"]
+	path = src/mavlink
+	url = https://github.com/mavlink/mavlink
+[submodule "src/mavros"]
+	path = src/mavros
+	url = https://github.com/Autonomous-droneProject/mavros.git
+[submodule "docs/KestrelAssembly"]
+	path = docs/KestrelAssembly
+	url = https://github.com/Autonomous-droneProject/KestrelAssembly.git
