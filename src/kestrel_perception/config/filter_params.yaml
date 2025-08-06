@@ -1,0 +1,5 @@
+/kestrel_perception/sensor_validator:
+  ros__parameters:
+    min_range: 0.04  # meters
+    max_range: 4.0   # meters
+    max_std_dev: 0.1 # meters
