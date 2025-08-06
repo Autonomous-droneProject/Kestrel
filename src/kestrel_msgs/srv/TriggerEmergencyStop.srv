@@ -1,4 +1,9 @@
-# Empty request
----
+# Service to immediately stop the drone in an emergency
 
-# Empty response
+# Request
+# A brief HUMAN READABLE reason for the emergency stop for logging purposes
+string reason
+---
+# Response
+bool acknowledged # so this confirms that the emergency stop command has been received and is being executed
+string message   # ex... "Emergency stop acknowledged, Reason: Proximity breach"
