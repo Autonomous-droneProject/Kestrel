@@ -6,8 +6,7 @@ from pathlib import Path
 
 # ROS messages
 from sensor_msgs.msg import Image
-from kestrel_msgs.msg import DetectionWithEmbedding, DetectionWithEmbeddingArray
-from vision_msgs.msg import Detection2D, ObjectHypothesisWithPose, BoundingBox2D
+from kestrel_msgs.msg import EmbeddedDetection2D, EmbeddedDetection2DArray
 
 # Computer vision and deep learning libraries
 import cv2
@@ -29,17 +28,27 @@ class VisionNode(Node):
     def __init__(self):
         super().__init__('vision_node')
 
-        # initialize models
+       # initialize models
         self.yolo_model = YOLO('yolo11m.pt')
         self.cnn_model = CNNdeepSORT(embedding_dim=128)
-        self.get_logger().info("Loaded YOLO and CNNdeepSORT models successfully.")
+
+        # Load weights
+        checkpoint_path = Path(__file__).parent / 'best_model_checkpoint.pth'
+        if checkpoint_path.is_file():
+            checkpoint = torch.load(checkpoint_path, map_location='cuda')
+            self.cnn_model.load_state_dict(checkpoint['model_state_dict'])
+            self.cnn_model.eval()
+            self.get_logger().info("Loaded CNN weights from checkpoint.")
+        else:
+            self.get_logger().warn(f"Could not find CNN checkpoint at {checkpoint_path}. Using untrained model.")
+
 
         self.bridge = CvBridge()
         # threshold to stop certain stuff to go into cnn
         self.conf_threshold = self.declare_parameter('conf_threshold', 0.5).get_parameter_value().double_value
 
         # create publishers and subscription
-        self.pub_det = self.create_publisher(DetectionWithEmbeddingArray, '/kestrel/detections', 10)
+        self.pub_det = self.create_publisher(EmbeddedDetection2DArray, '/kestrel/detections', 10)
         self.pub_dbg = self.create_publisher(Image, '/kestrel/debug/frame', 10)
         self.image_subscriber = self.create_subscription(Image, '/camera/image_raw', self.image_callback, 10)
 
@@ -50,7 +59,7 @@ class VisionNode(Node):
         frame = self.bridge.imgmsg_to_cv2(msg, 'bgr8')
         yolo_results = self.yolo_model(frame, verbose=False)[0]
 
-        det_array_msg = DetectionWithEmbeddingArray()
+        det_array_msg = EmbeddedDetection2DArray()
         det_array_msg.header = msg.header
 
         for box in yolo_results.boxes:
@@ -68,25 +77,28 @@ class VisionNode(Node):
                     continue
 
                 # Populate the custom ROS message
-                custom_detection = DetectionWithEmbedding()
-                custom_detection.detection.header = msg.header
+                detection_msg = EmbeddedDetection2D()
+                detection_msg.header = msg.header
                 
-                # standard hypothesis msg from ros with info on detection 
-                hypothesis = ObjectHypothesisWithPose()
-                hypothesis.hypothesis.class_id = class_name
-                hypothesis.hypothesis.score = conf
-                custom_detection.detection.results.append(hypothesis)
-
+                # populate msg with info on detection 
+                detection_msg.class_name = class_name
+                detection_msg.conf = conf
+                
                 x1, y1, x2, y2 = map(int, box.xyxy[0]) # get corners of bbox
-                custom_detection.detection.bbox = BoundingBox2D(
-                    center=rclpy.geometry.Pose2D(x=float((x1+x2)/2), y=float((y1+y2)/2)),
-                    size_x=float(x2-x1),
-                    size_y=float(y2-y1)
-                )
+                detection_msg.x1 = x1
+                detection_msg.y1 = y1
+                detection_msg.x2 = x2
+                detection_msg.y2 = y2
+                
+                detection_msg.w = x2-x1
+                detection_msg.h = y2-y1
+
+                detection_msg.center_x = (x1+x2)/2
+                detection_msg.center_y = (y1+y2)/2
 
                 # add this detection to rest of all detections (the array)
-                custom_detection.embedding = appearance_vector.tolist()
-                det_array_msg.detections.append(custom_detection)
+                detection_msg.embedding = appearance_vector.tolist()
+                det_array_msg.detections.append(detection_msg)
 
                 # draws bbox on the frame
                 cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)

@@ -1,7 +1,5 @@
 #This skeleton code's structure comes from the research paper: https://www.mdpi.com/2076-3417/12/3/1319
 
-#Contain the CNN that deepSORT uses in replace of the Hungarion based Cost Matrix
-from filterpy.kalman import KalmanFilter
 import numpy as np
 from numpy.typing import NDArray
 
@@ -14,7 +12,6 @@ class DataAssociation:
         A list of bounding boxes representing predicted tracks, each in the format [x, y, w, h].
     """
     
-
     #Euclidean Distance Based Cost Matrix (𝐷𝐸(𝐷,𝑃))
     def euclidean_cost(
         self,
