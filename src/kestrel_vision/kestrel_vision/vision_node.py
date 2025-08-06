@@ -3,8 +3,10 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from vision_msgs.msg import Detection2DArray        # standard ROS message :contentReference[oaicite:2]{index=2}
+from kestrel_msgs.msg import EmbeddedDetection2D, EmbeddedDetection2DArray
 from cv_bridge import CvBridge
 from ultralytics import YOLO
+from model import CNNdeepSORT
 import cv2
 
 class VisionNode(Node):
@@ -20,7 +22,7 @@ class VisionNode(Node):
         self.model = YOLO(model_path)
 
         # if reading from webcam; later subscribe to '/camera/image_raw'
-        self.cap = cv2.VideoCapture(0)
+        #self.cap = cv2.VideoCapture(0)
 
     def infer(self):
         ret, frame = self.cap.read()

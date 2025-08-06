@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>kestrel_communication</name>
+  <version>0.1.0</version>
+  <description>Handles communication between ROS 2 nodes and subsystems</description>
+  <maintainer email="da364739@ucf.edu">David Orjuela</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- C++ deps -->
+  <depend>rclcpp</depend>
+  <depend>std_msgs</depend>
+
+  <!-- Python deps -->
+  <exec_depend>rclpy</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
