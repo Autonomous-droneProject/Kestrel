@@ -1,0 +1,6 @@
+# Request: The I2C channel you want to select (0-7)
+int8 channel
+---
+# Response: Confirmation of the action
+bool success
+string message
