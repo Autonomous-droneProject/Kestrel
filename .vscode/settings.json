@@ -3,5 +3,25 @@
         "string": "cpp",
         "iostream": "cpp"
     },
-    "C_Cpp.errorSquiggles": "enabled"
+    "C_Cpp.errorSquiggles": "enabled",
+    "python.autoComplete.extraPaths": [
+        "/home/syndric/Documents/Kestrel/install/tca9548a/lib/python3.12/site-packages",
+        "/home/syndric/Documents/Kestrel/install/mavros/lib/python3.12/site-packages",
+        "/home/syndric/Documents/Kestrel/install/mavros_msgs/lib/python3.12/site-packages",
+        "/home/syndric/Documents/Kestrel/build/kestrel_vision",
+        "/home/syndric/Documents/Kestrel/install/kestrel_vision/lib/python3.12/site-packages",
+        "/home/syndric/Documents/Kestrel/install/kestrel_control/lib/python3.12/site-packages",
+        "/home/syndric/Documents/Kestrel/install/kestrel_communication/lib/python3.12/site-packages",
+        "/opt/ros/jazzy/lib/python3.12/site-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/syndric/Documents/Kestrel/install/tca9548a/lib/python3.12/site-packages",
+        "/home/syndric/Documents/Kestrel/install/mavros/lib/python3.12/site-packages",
+        "/home/syndric/Documents/Kestrel/install/mavros_msgs/lib/python3.12/site-packages",
+        "/home/syndric/Documents/Kestrel/build/kestrel_vision",
+        "/home/syndric/Documents/Kestrel/install/kestrel_vision/lib/python3.12/site-packages",
+        "/home/syndric/Documents/Kestrel/install/kestrel_control/lib/python3.12/site-packages",
+        "/home/syndric/Documents/Kestrel/install/kestrel_communication/lib/python3.12/site-packages",
+        "/opt/ros/jazzy/lib/python3.12/site-packages"
+    ]
 }
