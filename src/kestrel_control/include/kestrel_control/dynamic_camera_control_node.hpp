@@ -3,6 +3,9 @@
 #include "std_msgs/msg/u_int8.hpp"
 #include "control_toolbox/pid.hpp"
 
+#ifndef DYNAMIC_CAMERA_CONTROL_NODE_HPP_
+#define DYNAMIC_CAMERA_CONTROL_NODE_HPP_
+
 class DynamicCameraControlNode : public rclcpp::Node
 {
     public:
@@ -39,3 +42,5 @@ class DynamicCameraControlNode : public rclcpp::Node
         rclcpp::Publisher<std_msgs::msg::Int16>::SharedPtr pub_drone_y;
         */
 };
+
+#endif
