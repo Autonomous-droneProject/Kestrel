@@ -43,4 +43,5 @@ class DynamicCameraControlNode : public rclcpp::Node
         */
 };
 
-#endif
+#endif //DYNAMIC_CAMERA_CONTROL_NODE_HPP_
+
