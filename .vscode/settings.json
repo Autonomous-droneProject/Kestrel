@@ -3,7 +3,7 @@
         "string": "cpp",
         "iostream": "cpp"
     },
-    "C_Cpp.errorSquiggles": "enabled",
+    "C_Cpp.errorSquiggles": "disabled",
     "python.autoComplete.extraPaths": [
         "/home/syndric/Documents/Kestrel/install/tca9548a/lib/python3.12/site-packages",
         "/home/syndric/Documents/Kestrel/install/mavros/lib/python3.12/site-packages",
