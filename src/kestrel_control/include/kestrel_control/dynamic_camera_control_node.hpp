@@ -1,6 +1,6 @@
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/point.hpp"
-#include "std_msgs/msg/u_int8.hpp"
+#include "kestrel_msgs/msg/CameraCommand.msg"
 #include "control_toolbox/pid.hpp"
 
 #ifndef DYNAMIC_CAMERA_CONTROL_NODE_HPP_
@@ -19,29 +19,21 @@ class DynamicCameraControlNode : public rclcpp::Node
         control_toolbox::Pid x_pid_controller;
         control_toolbox::Pid y_pid_controller;
 
-        rclcpp::Duration prev_time;
-
-        double prev_x;
-        double prev_y;
-        bool first_reading;
+        rclcpp::Time prev_time;
         rclcpp::Duration dt;
 
-        std_msgs::msg::UInt8 p_msg_x;
-        std_msgs::msg::UInt8 p_msg_y;
+        kestrel_msgs::msg::CameraCommand cam_msg_;
 
         /*
         std_msgs::msg::Int16 p_msg_x_motor;
         std_msgs::msg::Int16 p_msg_y_motor;
         */
 
-        rclcpp::Publisher<std_msgs::msg::UInt8>::SharedPtr pub_x_move;
-        rclcpp::Publisher<std_msgs::msg::UInt8>::SharedPtr pub_y_move;
+        rclcpp::Publisher<kestrel_msgs::msg::CameraCommand>::SharedPtr camera_cmd_pub_;
 
         /*
-        rclcpp::Publisher<std_msgs::msg::Int16>::SharedPtr pub_drone_x;
-        rclcpp::Publisher<std_msgs::msg::Int16>::SharedPtr pub_drone_y;
+        rclcpp::Publisher<std_msgs::msg::SomethingCommand>::SharedPtr drone_cmd_pub_;
         */
 };
 
 #endif //DYNAMIC_CAMERA_CONTROL_NODE_HPP_
-
