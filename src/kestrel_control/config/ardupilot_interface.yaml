@@ -13,10 +13,3 @@ mavros:
   target_frame_id: "map"
   target_system_id: 1
   target_component_id: 1
-
-
-# settings for coordinate system frames
-frames:
-  base_link: "base_link" # main body frame of the drone
-  odom_frame: "odom" # world-fixed frame from odometry
-  map_frame: "map" # global map frame
