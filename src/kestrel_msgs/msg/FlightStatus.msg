@@ -2,7 +2,7 @@
 
 # Header for timestamp
 
-std_msgs/Header Header
+std_msgs/Header header
 
 #Flight mode constraints for clarity
 
@@ -11,10 +11,10 @@ uint8 MODE_MANUAL = 1
 uint8 MODE_AUTO = 2
 uint8 MODE_LANDING = 3
 uint8 MODE_EMERGENCY = 4
-uint MODE_LANDED = 5
+uint8 MODE_LANDED = 5
 
 # Current flight mode
-uint flight_mode
+uint8 flight_mode
 
 # Armed state of the vehicle
 bool armed 
@@ -23,4 +23,4 @@ bool armed
 float32 battery_percent
 
 # Propeller speeds in RPM. The array order SHOULD be consistent.
-uint[] propeller_speeds
+uint8[] propeller_speeds

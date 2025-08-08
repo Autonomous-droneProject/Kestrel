@@ -6,9 +6,9 @@ std_msgs/Header header
 # Overall system status lole
 
 uint8 STATUS_OK = 0
-uint STATUS_WARN 1
-uint STATUS_ERROR = 2
-uint STATUS_CRITICAL = 3
+uint8 STATUS_WARN = 1
+uint8 STATUS_ERROR = 2
+uint8 STATUS_CRITICAL = 3
 uint8 status
 
 # CPU and Memory usage
@@ -19,4 +19,4 @@ float32 memory_usage_percent
 float32 temperature_celsius
 
 # Ok so this is a list of key-value pairs for other component-specific status lol
-diagnostic_msgs/KeyValue[]
+# diagnostic_msgs/msg/KeyValue[] my_key_values
