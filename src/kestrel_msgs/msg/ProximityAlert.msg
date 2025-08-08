@@ -2,16 +2,16 @@
 
 # Header for timestamp and frame ID
 
-std_msgs Header header
+std_msgs/Header header
 
 # Distance to the closest detected object
 
-float32 Distance
+float32 distance
 
 # Severity level of the alert
 
-uint8 SEVERITY_LOW 1 # CAUTION
-uint8 SEVERITY_MEDIUM # WARNING
-uint8 SEVERITY_HIGH # CRITICAL
+uint8 SEVERITY_LOW  = 1 # CAUTION
+uint8 SEVERITY_MEDIUM = 2 # WARNING
+uint8 SEVERITY_HIGH = 3 # CRITICAL
 
 uint8 severity
