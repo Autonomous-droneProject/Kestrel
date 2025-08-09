@@ -1,5 +1,5 @@
 #include "rclcpp/rclcpp.hpp"
-#include "geometry_msgs/msg/point.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
 #include "kestrel_msgs/msg/CameraCommand.msg"
 #include "control_toolbox/pid.hpp"
 #include "dynamic_camera_control_node.hpp"
@@ -15,7 +15,7 @@ class DynamicCameraControlNode : public rclcpp::Node
     public:
         DynamicCameraControlNode() : Node("camera_control")
         {
-            sub_position = this->create_subscription<geometry_msgs::msg::Point>("position", 5, std::bind(&DynamicCameraControlNode::update_position_callback, this, std::placeholders::_1));
+            sub_position = this->create_subscription<geometry_msgs::msg::PoseStamped>("odom", 5, std::bind(&DynamicCameraControlNode::update_position_callback, this, std::placeholders::_1));
             
             camera_cmd_pub_ = this->create_publisher<kestrel_msgs::msg::CameraCommand>("servo_camera_command", 5);
 
@@ -47,17 +47,32 @@ class DynamicCameraControlNode : public rclcpp::Node
         }
     
     private:
-        void update_position_callback(const geometry_msgs::msg::Point::SharedPtr msg)
+        void update_position_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
         {
-            rclcpp::Time curr_time = this->now();
+            const rclcpp::Duration max_dt = rclcpp::Duration::from_seconds(0.1);
+            const rclcpp::Duration min_dt = rclcpp::Duration::from_seconds(0.001);
+
+            rclcpp::Time curr_time = msg->header.stamp;
             rclcpp::Duration dt = curr_time-prev_time;
             prev_time = curr_time; //new previous
 
-            double x_err = 0.0 - msg->x; //Center - object position
-            double y_err = 0.0 - msg->y; //Center - object position
+            //clamp time
+            if(dt > max_dt)
+            {
+                dt = max_dt;
+            } 
+            else if(dt < min_dt)
+            {
+                dt = min_dt;
+            }
 
-            double x_angle = x_pid_controller.computeError(x_err, dt);
-            double y_angle = y_pid_controller.computeError(y_err, dt);
+            double dt_sec = dt.seconds();
+
+            double x_err = 0.0 - msg->pose.position.x; //Center - object position x
+            double y_err = 0.0 - msg->pose.position.y; //Center - object position y
+
+            double x_angle = x_pid_controller.computeCommand(x_err, dt_sec);
+            double y_angle = y_pid_controller.computeCommand(y_err, dt_sec);
 
             /*
             double excess_x_angle = 0.0;
