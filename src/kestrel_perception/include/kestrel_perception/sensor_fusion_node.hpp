@@ -20,7 +20,7 @@ namespace kestrel_perception
 class SensorFusionNode : public rclcpp::Node
 {
 public:
-  explicit SensorFusionNode(const rclcpp::NodeOptions & options);
+  explicit SensorFusionNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
 
 private:
   void initialize();
@@ -47,6 +47,9 @@ private:
   // latest data
   std::vector<kestrel_msgs::msg::SensorReading> latest_sensor_readings_;
   std::mutex data_mutex_;
+
+  std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
+  std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 };
 
 } // namespace kestrel_perception

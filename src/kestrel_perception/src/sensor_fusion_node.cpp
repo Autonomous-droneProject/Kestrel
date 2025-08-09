@@ -140,5 +140,13 @@ geometry_msgs::msg::Point SensorFusionNode::convert_reading_to_point(const kestr
 
 } // namespace kestrel_perception
 
+int main(int argc, char * argv[])
+{
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<kestrel_perception::SensorFusionNode>());
+  rclcpp::shutdown();
+  return 0;
+}
+
 #include "rclcpp_components/register_node_macro.hpp"
 RCLCPP_COMPONENTS_REGISTER_NODE(kestrel_perception::SensorFusionNode)
