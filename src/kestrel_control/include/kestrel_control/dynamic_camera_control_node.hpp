@@ -1,5 +1,5 @@
 #include "rclcpp/rclcpp.hpp"
-#include "geometry_msgs/msg/point.hpp"
+#include "geometry_msgs/msg/pose_stamped.hpp"
 #include "kestrel_msgs/msgs/CameraCommand.msg"
 #include "control_toolbox/pid.hpp"
 
@@ -12,9 +12,9 @@ class DynamicCameraControlNode : public rclcpp::Node
         DynamicCameraControlNode();
     
     private:
-        void update_position_callback(const geometry_msgs::msg::Point::SharedPtr msg);
+        void update_position_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
 
-        rclcpp::Subscription<geometry_msgs::msg::Point>::SharedPtr sub_position;
+        rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr sub_position;
 
         double pan_p_, pan_i_, pan_d_;
         double tilt_p_, tilt_i_, tilt_d_;
@@ -23,7 +23,6 @@ class DynamicCameraControlNode : public rclcpp::Node
         control_toolbox::Pid y_pid_controller;
 
         rclcpp::Time prev_time;
-        rclcpp::Duration dt;
 
         kestrel_msgs::msg::CameraCommand cam_msg_;
 
