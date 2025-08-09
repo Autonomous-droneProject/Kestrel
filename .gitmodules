@@ -9,7 +9,13 @@
 	url = https://github.com/Autonomous-droneProject/ROS2-VL53L1X.git
 [submodule "src/driver/tca9548a"]
 	path = src/driver/tca9548a
-	url = https://github.com/Autonomous-droneProject/ros2_tca9548a.git
+	url = https://github.com/Autonomous-droneProject/ROS2_TCA9548A.git
+[submodule "src/driver/ina228"]
+	path = src/driver/ina228
+	url = https://github.com/Autonomous-droneProject/ROS2_INA228.git
+[submodule "src/driver/tfluna"]
+	path = src/driver/tfluna
+	url = https://github.com/Autonomous-droneProject/ROS2_TFLuna-I2C
 [submodule "docs/KestrelAssembly"]
 	path = docs/KestrelAssembly
 	url = https://github.com/Autonomous-droneProject/KestrelAssembly.git
