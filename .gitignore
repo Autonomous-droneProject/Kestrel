@@ -170,3 +170,4 @@ Docker/tasks.json
 # Vscode
 build_log.txt
 .vscode/
+.ignores/
