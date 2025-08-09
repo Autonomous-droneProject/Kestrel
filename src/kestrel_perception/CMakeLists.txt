@@ -22,7 +22,7 @@ find_package(tf2_geometry_msgs REQUIRED)
 include_directories(include)
 
 # All your perception sources
-set(SOURCE_FILES
+add_library(kestrel_perception_lib SHARED
   src/sensor_fusion_node.cpp
   src/i2c_driver.cpp
   src/uart_driver.cpp
@@ -30,12 +30,25 @@ set(SOURCE_FILES
   src/spatial_grid.cpp
 )
 
-add_executable(sensor_fusion_node ${SOURCE_FILES})
-ament_target_dependencies(sensor_fusion_node rclcpp std_msgs sensor_msgs kestrel_msgs rclcpp_components tf2_ros tf2_geometry_msgs)
+# Link the library to all its dependencies
+ament_target_dependencies(kestrel_perception_lib
+  rclcpp
+  std_msgs
+  sensor_msgs
+  kestrel_msgs
+  rclcpp_components
+  tf2_ros
+  tf2_geometry_msgs
+)
 
-# Install the node binary
-install(TARGETS sensor_fusion_node
-  DESTINATION lib/${PROJECT_NAME}
+add_executable(sensor_fusion_node src/sensor_fusion_node.cpp)
+target_link_libraries(sensor_fusion_node PUBLIC kestrel_perception_lib)
+
+# Install the library and the executable
+install(TARGETS kestrel_perception_lib sensor_fusion_node
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
 # Install headers
@@ -51,8 +64,10 @@ install(DIRECTORY config/
   DESTINATION share/${PROJECT_NAME}/config/
 )
 
-# Install tests
+# Add the test executable using standard CMake
 ament_add_gtest(test_sensor_fusion test/test_sensor_fusion.cpp)
-ament_target_dependencies(test_sensor_fusion rclcpp ament_cmake_gtest kestrel_msgs)
+
+# Link the executable to all its dependencies.
+target_link_libraries(test_sensor_fusion kestrel_perception_lib)
 
 ament_package()
