@@ -23,8 +23,25 @@ class DynamicCameraControlNode : public rclcpp::Node
             drone_cmd_pub_ = this->create_publisher<std_msgs::msg::SomethingCommand>("drone_overshoot_command", 5);
             */
 
-            x_pid_controller.initPid(1.0, 0.0, 0.1); //Left right
-            y_pid_controller.initPid(1.0, 0.0, 0.1); //Up down
+            //PID k value parameters for controllers
+            this->declare_parameter<double>("camera_control_pid.pan.p", 1.2);
+            this->declare_parameter<double>("camera_control_pid.pan.i", 0.1);
+            this->declare_parameter<double>("camera_control_pid.pan.d", 0.05);
+
+            this->declare_parameter<double>("camera_control_pid.tilt.p", 1.5);
+            this->declare_parameter<double>("camera_control_pid.tilt.i", 0.1);
+            this->declare_parameter<double>("camera_control_pid.tilt.d", 0.08);
+
+            pan_p_ = this->get_parameter("camera_control_pid.pan.p").as_double();
+            pan_i_ = this->get_parameter("camera_control_pid.pan.i").as_double();
+            pan_d_ = this->get_parameter("camera_control_pid.pan.d").as_double();
+
+            tilt_p_ = this->get_parameter("camera_control_pid.tilt.p").as_double();
+            tilt_i_ = this->get_parameter("camera_control_pid.tilt.i").as_double();
+            tilt_d_ = this->get_parameter("camera_control_pid.tilt.d").as_double();
+
+            x_pid_controller.initPid(pan_p_, pan_i_, pan_d_); //Left right
+            y_pid_controller.initPid(tilt_p_, tilt_i_, tilt_d_); //Up down
 
             prev_time = this->now(); //time when first called
         }
