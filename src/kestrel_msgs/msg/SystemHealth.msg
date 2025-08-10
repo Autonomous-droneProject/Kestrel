@@ -19,4 +19,4 @@ float32 memory_usage_percent
 float32 temperature_celsius
 
 # Ok so this is a list of key-value pairs for other component-specific status lol
-# diagnostic_msgs/msg/KeyValue[] my_key_values
+diagnostic_msgs/KeyValue[] my_key_values
