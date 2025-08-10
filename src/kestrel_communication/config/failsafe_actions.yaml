@@ -1,0 +1,9 @@
+# this file would be used by a dedicated failsafe manager node (not yet created)
+# it would define what action to take (ex.. rtl, land, hover) for specific triggers
+# for example:
+
+failsafe_manager:
+  ros__parameters:
+    on_gcs_loss: "RTL"
+    on_gps_loss: "LAND"
+    on_low_battery: "RTL"
