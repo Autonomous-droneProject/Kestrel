@@ -1,6 +1,6 @@
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
-#include "kestrel_msgs/msg/CameraCommand.msg"
+#include "kestrel_msgs/msg/camera_command.hpp"
 #include "control_toolbox/pid.hpp"
 #include "dynamic_camera_control_node.hpp"
 
