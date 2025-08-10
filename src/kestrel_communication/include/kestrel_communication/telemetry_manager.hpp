@@ -6,6 +6,7 @@
 #include "kestrel_msgs/msg/system_health.hpp"
 #include "sensor_msgs/msg/battery_state.hpp"
 #include "mavros_msgs/msg/state.hpp"
+#include "sensor_msgs/msg/battery_state.hpp"
 #include <mutex>
 #include <fstream>
 
@@ -23,6 +24,8 @@ private:
   void mavros_state_callback(const mavros_msgs::msg::State::SharedPtr msg);
   void publish_telemetry();
   float get_cpu_temperature();
+  float get_memory_usage();
+  float get_cpu_usage();
 
   // subscribers for individual data points
   rclcpp::Subscription<sensor_msgs::msg::BatteryState>::SharedPtr battery_sub_;
@@ -41,6 +44,10 @@ private:
   mavros_msgs::msg::State latest_mavros_state_;
   bool has_battery_data_ = false;
   bool has_mavros_state_ = false;
+
+  // time
+  long long prev_total_time_;
+  long long prev_idle_time_;
 };
 
 } // namespace kestrel_communication

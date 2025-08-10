@@ -29,6 +29,8 @@ void TelemetryManagerNode::initialize()
     std::chrono::seconds(1),
     std::bind(&TelemetryManagerNode::publish_telemetry, this));
 
+  prev_total_time_ = 0;
+  prev_idle_time_ = 0;
   RCLCPP_INFO(this->get_logger(), "TelemetryManagerNode initialized.");
 }
 
