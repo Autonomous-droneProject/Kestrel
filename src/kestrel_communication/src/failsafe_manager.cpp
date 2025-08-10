@@ -77,4 +77,13 @@ void FailsafeManagerNode::execute_failsafe_action(const std::string& action, con
   set_flight_mode_client_->async_send_request(request);
 }
 
-} // namespace kestrel_communication
+} // namespace kestrel_communication\
+
+int main(int argc, char *argv[])
+{
+    rclcpp::init(argc, argv);
+    auto node = std::make_shared<kestrel_communication::FailsafeManagerNode>();
+    rclcpp::spin(node);
+    rclcpp::shutdown();
+    return 0;
+}

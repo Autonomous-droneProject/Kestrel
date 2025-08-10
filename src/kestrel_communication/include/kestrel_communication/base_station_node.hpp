@@ -16,7 +16,7 @@ namespace kestrel_communication
 class BaseStationNode : public rclcpp::Node
 {
 public:
-  explicit BaseStationNode(const rclcpp::NodeOptions & options);
+  explicit BaseStationNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
 
 private:
   void initialize();

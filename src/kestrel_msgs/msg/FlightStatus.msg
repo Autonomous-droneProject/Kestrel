@@ -6,7 +6,7 @@ std_msgs/Header header
 
 #Flight mode constraints for clarity
 
-uint8 MODE_UNKOWN = 0
+uint8 MODE_UNKNOWN = 0
 uint8 MODE_MANUAL = 1
 uint8 MODE_AUTO = 2
 uint8 MODE_LANDING = 3

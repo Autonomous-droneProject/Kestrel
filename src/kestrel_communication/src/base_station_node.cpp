@@ -99,3 +99,12 @@ void BaseStationNode::handle_set_mode_command(const std::string& mode_str)
 }
 
 } // namespace kestrel_communication
+
+int main(int argc, char *argv[])
+{
+    rclcpp::init(argc, argv);
+    auto node = std::make_shared<kestrel_communication::BaseStationNode>();
+    rclcpp::spin(node);
+    rclcpp::shutdown();
+    return 0;
+}

@@ -12,7 +12,7 @@ namespace kestrel_communication
 class HeartbeatMonitorNode : public rclcpp::Node
 {
 public:
-  explicit HeartbeatMonitorNode(const rclcpp::NodeOptions & options);
+  explicit HeartbeatMonitorNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
 
 private:
   void initialize();
