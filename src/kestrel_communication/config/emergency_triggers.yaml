@@ -1,0 +1,8 @@
+emergency_handler_node:
+  ros__parameters:
+    emergency_triggers:
+      # trigger an estop if any obstacle is closer than this distance (meters)
+      critical_proximity_m: 0.5
+
+      # trigger an estop if the battery percentage drops below this value
+      critical_battery_pct: 10.0
