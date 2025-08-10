@@ -26,7 +26,7 @@ private:
   rclcpp::Subscription<kestrel_msgs::msg::FlightStatus>::SharedPtr flight_status_sub_;
   rclcpp::Subscription<sensor_msgs/msg::NavSatFix>::SharedPtr gps_sub_;
 
-  // client to command the drone to change its flight mode (e.g., to RTL or LAND)
+  // client to command the drone to change its flight mode (ex.. to RTL or LAND)
   rclcpp::Client<kestrel_msgs::srv::SetFlightMode>::SharedPtr set_flight_mode_client_;
 
   // failsafe parameters loaded from yaml
