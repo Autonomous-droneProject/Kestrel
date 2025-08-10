@@ -41,7 +41,7 @@ ament_target_dependencies(kestrel_perception_lib
   tf2_geometry_msgs
 )
 
-add_executable(sensor_fusion_node src/sensor_fusion_node.cpp)
+add_executable(sensor_fusion_node src/sensor_fusion_main.cpp)
 target_link_libraries(sensor_fusion_node PUBLIC kestrel_perception_lib)
 
 # Install the library and the executable
