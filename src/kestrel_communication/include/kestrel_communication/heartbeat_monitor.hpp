@@ -24,7 +24,7 @@ private:
   rclcpp::Subscription<std_msgs::msg::Header>::SharedPtr heartbeat_sub_;
 
   // client to call the emergency stop service
-  rclcpp::Client<kestrel_msgs::srv/TriggerEmergencyStop>::SharedPtr estop_client_;
+  rclcpp::Client<kestrel_msgs::srv::TriggerEmergencyStop>::SharedPtr estop_client_;
 
   // timer to periodically check the connection status
   rclcpp::TimerBase::SharedPtr timer_;
