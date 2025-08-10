@@ -1,6 +1,6 @@
 #include "rclcpp/rclcpp.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
-#include "kestrel_msgs/msgs/CameraCommand.msg"
+#include "kestrel_msgs/msgs/camera_command.hpp"
 #include "control_toolbox/pid.hpp"
 
 #ifndef DYNAMIC_CAMERA_CONTROL_NODE_HPP_
@@ -39,3 +39,4 @@ class DynamicCameraControlNode : public rclcpp::Node
 };
 
 #endif //DYNAMIC_CAMERA_CONTROL_NODE_HPP_
+
