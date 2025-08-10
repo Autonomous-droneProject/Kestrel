@@ -3,6 +3,8 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
 
+# ok so this file only starts the nodes related to safety and emergency monitoring
+
 def generate_launch_description():
 
     kestrel_communication_share = get_package_share_directory('kestrel_communication')
