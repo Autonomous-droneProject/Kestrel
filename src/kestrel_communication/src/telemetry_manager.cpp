@@ -159,10 +159,19 @@ void TelemetryManagerNode::publish_telemetry()
       diagnostic_msgs::msg::KeyValue battery_voltage;
       battery_voltage.key = "battery_voltage_v";
       battery_voltage.value = std::to_string(latest_battery_state_.voltage);
-      system_health_msg.components.push_back(battery_voltage);
+      system_health_msg.my_key_values.push_back(battery_voltage);
     }
   }
   system_health_pub_->publish(system_health_msg);
 }
 
 } // namespace kestrel_communication
+
+int main(int argc, char *argv[])
+{
+    rclcpp::init(argc, argv);
+    auto node = std::make_shared<kestrel_communication::TelemetryManagerNode>();
+    rclcpp::spin(node);
+    rclcpp::shutdown();
+    return 0;
+}

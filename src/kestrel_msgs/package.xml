@@ -15,8 +15,7 @@
   <exec_depend>std_msgs</exec_depend>
   <build_depend>geometry_msgs</build_depend>
   <exec_depend>geometry_msgs</exec_depend>
-  <build_depend>diagnostic_msgs</build_depend>
-  <exec_depend>diagnostic_msgs</exec_depend>
+  <depend>diagnostic_msgs</depend>
   <!--<build_depend>vision_msgs</build_depend>
   <exec_depend>vision_msgs</exec_depend>-->
 

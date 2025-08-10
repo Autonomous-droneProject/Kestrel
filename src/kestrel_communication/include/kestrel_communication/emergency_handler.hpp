@@ -13,7 +13,7 @@ namespace kestrel_communication
 class EmergencyHandlerNode : public rclcpp::Node
 {
 public:
-  explicit EmergencyHandlerNode(const rclcpp::NodeOptions & options);
+  explicit EmergencyHandlerNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
 
 private:
   void initialize();

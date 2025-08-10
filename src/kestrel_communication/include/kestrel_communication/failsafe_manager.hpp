@@ -14,7 +14,7 @@ namespace kestrel_communication
 class FailsafeManagerNode : public rclcpp::Node
 {
 public:
-  explicit FailsafeManagerNode(const rclcpp::NodeOptions & options);
+  explicit FailsafeManagerNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
 
 private:
   void initialize();

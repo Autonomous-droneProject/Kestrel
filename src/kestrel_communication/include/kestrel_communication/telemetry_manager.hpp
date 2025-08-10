@@ -16,7 +16,7 @@ namespace kestrel_communication
 class TelemetryManagerNode : public rclcpp::Node
 {
 public:
-  explicit TelemetryManagerNode(const rclcpp::NodeOptions & options);
+  explicit TelemetryManagerNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
 
 private:
   void initialize();
