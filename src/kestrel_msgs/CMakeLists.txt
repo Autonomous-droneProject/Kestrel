@@ -31,8 +31,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/TriggerEmergencyStop.srv"
   "action/FollowTarget.action"
   "action/NavigateToWaypoint.action"
-  DEPENDENCIES std_msgs geometry_msgs #vision_msgs
+  DEPENDENCIES std_msgs geometry_msgs diagnostic_msgs#vision_msgs
 )
 
-ament_export_dependencies(rosidl_default_runtime)
+ament_export_dependencies(rosidl_default_runtime diagnostic_msgs)
 ament_package()

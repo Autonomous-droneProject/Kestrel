@@ -1,0 +1,6 @@
+telemetry_manager_node:
+  ros__parameters:
+    # this file is currently empty as the telemetry manager gets its data
+    # from standard topics and doesn't require special configuration
+    # if you want i could add things here later, like a list of specific components to monitor
+    dummy_param: true

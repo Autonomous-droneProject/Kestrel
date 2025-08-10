@@ -1,0 +1,6 @@
+heartbeat_monitor_node:
+  ros__parameters:
+    comms:
+      # if a heartbeat from the gcs isn't received for this many seconds,
+      # trigger a connection-lost failsafe.
+      heartbeat_timeout_s: 5.0
