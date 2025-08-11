@@ -19,3 +19,6 @@
 [submodule "docs/KestrelAssembly"]
 	path = docs/KestrelAssembly
 	url = https://github.com/Autonomous-droneProject/KestrelAssembly.git
+[submodule "src/geographiclib"]
+	path = src/geographiclib
+	url = https://github.com/geographiclib/geographiclib.git

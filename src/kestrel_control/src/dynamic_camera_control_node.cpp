@@ -9,7 +9,7 @@ later when we have to move the drone around
 
 namespace kestrel_control {
 DynamicCameraControlNode::DynamicCameraControlNode(
-    const rclcpp::NodeOptions &options = rclcpp::NodeOptions())
+    const rclcpp::NodeOptions &options)
     : rclcpp::Node("camera_control", options) {
   sub_position = this->create_subscription<geometry_msgs::msg::PoseStamped>(
       "odom", 5,
@@ -46,10 +46,8 @@ DynamicCameraControlNode::DynamicCameraControlNode(
   i_max_ = this->get_parameter("camera_control_pid.i_max").as_double();
   aw_ = this->get_parameter("camera_control_pid.windup").as_bool();
 
-  x_pid_controller.initPid(pan_p_, pan_i_, pan_d_, i_min_, i_max_,
-                           aw_); // Left right
-  y_pid_controller.initPid(tilt_p_, tilt_i_, tilt_d_, i_min_, i_max_,
-                           aw_); // Up down
+  x_pid_controller = control_toolbox::Pid(pan_p_, pan_i_, pan_d_, i_min_, i_max_, control_toolbox::AntiWindupStrategy::BACK_CALCULATION);
+  y_pid_controller = control_toolbox::Pid(tilt_p_, tilt_i_, tilt_d_, i_min_, i_max_, control_toolbox::AntiWindupStrategy::BACK_CALCULATION);
 
   prev_time = this->now(); // time when first called
 }

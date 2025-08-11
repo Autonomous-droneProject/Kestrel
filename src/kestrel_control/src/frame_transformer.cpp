@@ -31,7 +31,7 @@ void FrameTransformer::gps_callback(const sensor_msgs::msg::NavSatFix::SharedPtr
   if (!is_initialized_) {
     geo_converter_ = std::make_unique<GeographicLib::LocalCartesian>(msg->latitude, msg->longitude, msg->altitude);
     is_initialized_ = true;
-    RCLCPP_INFO(this->get_logger(), "gps origin set to: lat=%.6f, lon=%.6f, alt=%.2f", msg->latitude, msg.longitude, msg.altitude);
+    RCLCPP_INFO(this->get_logger(), "gps origin set to: lat=%.6f, lon=%.6f, alt=%.2f", msg->latitude, msg->longitude, msg->altitude);
     return;
   }
 
@@ -52,3 +52,12 @@ void FrameTransformer::gps_callback(const sensor_msgs::msg::NavSatFix::SharedPtr
 }
 
 } // namespace kestrel_control
+
+int main(int argc, char *argv[])
+{
+    rclcpp::init(argc, argv);
+    auto node = std::make_shared<kestrel_control::FrameTransformer>();
+    rclcpp::spin(node);
+    rclcpp::shutdown();
+    return 0;
+}

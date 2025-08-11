@@ -50,3 +50,12 @@ namespace kestrel_control
     }
 
 } // namespace kestrel_control
+
+// Run node
+int main(int argc, char *argv[]) {
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<kestrel_control::ArduPilotTranslatorNode>());
+  rclcpp::shutdown();
+  return 0;
+}
+
