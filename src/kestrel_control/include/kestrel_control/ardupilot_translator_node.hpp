@@ -11,7 +11,7 @@ namespace kestrel_control
 class ArduPilotTranslatorNode : public rclcpp::Node
 {
 public:
-  explicit ArduPilotTranslatorNode(const rclcpp::NodeOptions & options);
+  explicit ArduPilotTranslatorNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
 
 private:
   void initialize();

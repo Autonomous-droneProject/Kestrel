@@ -13,7 +13,7 @@ namespace kestrel_control
 class FrameTransformer : public rclcpp::Node
 {
 public:
-  explicit FrameTransformer(const rclcpp::NodeOptions & options);
+  explicit FrameTransformer(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
 
 private:
   void initialize();

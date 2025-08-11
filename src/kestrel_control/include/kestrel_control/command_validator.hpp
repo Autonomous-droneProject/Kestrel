@@ -11,7 +11,7 @@ namespace kestrel_control
 class CommandValidator : public rclcpp::Node
 {
 public:
-  explicit CommandValidator(const rclcpp::NodeOptions & options);
+  explicit CommandValidator(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
 
 private:
   void initialize();

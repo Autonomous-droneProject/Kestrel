@@ -11,6 +11,12 @@
   <!-- C++ deps -->
   <depend>rclcpp</depend>
   <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>kestrel_msgs</depend>
+  <depend>GeographicLib</depend>
+  <depend>control_toolbox</depend>
+  <depend>mavros_msgs</depend>
 
   <!-- Python deps -->
   <exec_depend>rclpy</exec_depend>
