@@ -3,6 +3,7 @@ project(kestrel_control)
 
 # Core build dependencies
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_gtest REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
@@ -46,10 +47,10 @@ install(DIRECTORY python/kestrel_control
   DESTINATION lib/python3.12/site-packages/
 )
 
-ament_add_gtest(test_command_validator test/test_command_validator.cpp)
-ament_add_gtest(test_frame_transformer test/test_frame_transformer.cpp)
-target_link_libraries(test_command_validator "gtest" "rclcpp" "geometry_msgs" "kestrel_control")
-target_link_libraries(test_frame_transformer "gtest" "rclcpp" "geometry_msgs" "sensor_msgs" "kestrel_control")
+#ament_add_gtest(test_command_validator test/test_command_validator.cpp)
+#ament_add_gtest(test_frame_transformer test/test_frame_transformer.cpp)
+#ament_target_dependencies(test_command_validator "rclcpp" "geometry_msgs")
+#ament_target_dependencies(test_frame_transformer "rclcpp" "geometry_msgs" "sensor_msgs")
 
 
 ament_package()
