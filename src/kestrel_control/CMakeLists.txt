@@ -46,4 +46,10 @@ install(DIRECTORY python/kestrel_control
   DESTINATION lib/python3.12/site-packages/
 )
 
+ament_add_gtest(test_command_validator test/test_command_validator.cpp)
+ament_add_gtest(test_frame_transformer test/test_frame_transformer.cpp)
+target_link_libraries(test_command_validator "gtest" "rclcpp" "geometry_msgs" "kestrel_control")
+target_link_libraries(test_frame_transformer "gtest" "rclcpp" "geometry_msgs" "sensor_msgs" "kestrel_control")
+
+
 ament_package()

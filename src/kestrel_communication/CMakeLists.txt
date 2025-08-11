@@ -55,4 +55,10 @@ install(PROGRAMS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+ament_add_gtest(test_base_station test/test_base_station.cpp)
+ament_add_gtest(test_emergency_handler test/test_emergency_handler.cpp)
+target_link_libraries(test_base_station "gtest" "rclcpp" "std_msgs" "kestrel_msgs")
+target_link_libraries(test_emergency_handler "gtest" "rclcpp" "std_msgs" "kestrel_msgs")
+
+
 ament_package()
