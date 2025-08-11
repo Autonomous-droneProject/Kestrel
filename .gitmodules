@@ -1,8 +1,8 @@
-[submodule "src/mavlink"]
-	path = src/mavlink
+[submodule "src/lib/mavlink"]
+	path = src/lib/mavlink
 	url = https://github.com/mavlink/mavlink
-[submodule "src/mavros"]
-	path = src/mavros
+[submodule "src/lib/mavros"]
+	path = src/lib/mavros
 	url = https://github.com/Autonomous-droneProject/mavros.git
 [submodule "src/driver/vl53l1x"]
 	path = src/driver/vl53l1x
@@ -19,6 +19,6 @@
 [submodule "docs/KestrelAssembly"]
 	path = docs/KestrelAssembly
 	url = https://github.com/Autonomous-droneProject/KestrelAssembly.git
-[submodule "src/geographiclib"]
-	path = src/geographiclib
+[submodule "src/lib/geographiclib"]
+	path = src/lib/geographiclib
 	url = https://github.com/geographiclib/geographiclib.git
