@@ -1,0 +1,6 @@
+failsafe_manager_node:
+  ros__parameters:
+    failsafe_actions:
+      on_low_battery: "RTL"
+      on_gps_loss: "LAND"
+      low_battery_threshold_pct: 20.0
