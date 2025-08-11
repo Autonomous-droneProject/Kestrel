@@ -1,0 +1,15 @@
+# settings for communicating with the ArduPilot flight controller via MAVROS
+
+mavros:
+  # connection url for the flight controller
+  # common values:
+  # - "serial:///dev/ttyACM0:57600" for usb
+  # - "udp://:14550@" for udp
+  # im guessing man please update it once we get the HARDWARE
+  fcu_url: "serial:///dev/ttyACM0:57600"
+
+  # frames used by mavros
+  # ENSURE THESE MATCH UR TF TREE!!!
+  target_frame_id: "map"
+  target_system_id: 1
+  target_component_id: 1

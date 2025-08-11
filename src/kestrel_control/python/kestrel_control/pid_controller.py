@@ -1,43 +1,57 @@
-import time
+import rclpy
+from rclpy.clock import Clock, ClockType
+from rclpy.duration import Duration
 
 class PIDController():
-    #CENTER = (0, 0) For PD servos finding distance, may try to implement
     #Clamping variables for frame rate (so it is not 0)
-    MAX_TIME = 0.1
-    MIN_TIME = 0.001
+    MAX_TIME = Duration(nanoseconds = 100_000_000)
+    MIN_TIME = Duration(nanoseconds = 1_000_000)
+
     #Clamping variables for integral
-    MAX_I = 1
-    MIN_I = -1
+    MAX_I = 1.0
+    MIN_I = -1.0
 
     def __init__ (self, kp, ki, kd):
-        #If you are using a servo, just use PD, should be ki=0
         self.kp = kp
         self.ki = ki
         self.kd = kd
-        # Center marking for servo pd, I think open cv has a funky grid which is why this was 
-        # included but could be sorted by bridge file
-        # self.centerX = 0 May replace the center pos with a tuple/coordinates
-        # self.centerY = 0
-        # self.center = CENTER
-        self.prev_error = 0.0
-        self.prev_time = 0.0
-        self.curr_time = time.perf_counter() #I gotta review this section
-        self.dt = self.curr_time
 
-    def step(self, offset):
+        self.clock = Clock(clock_type=ClockType.SYSTEM_TIME)
+        self.prev_time = self.clock.now()
+
+        self.prev_error = 0.0
+
+        self.i = 0.0
+
+    def compute_command(self, offset): #or whatever name
         error = offset #error test, could be distance or motor offset
-        self.prev_time = self.curr_time #prev time is time of last step
-        self.curr_time = time.perf_counter() #time counter find new frame rate
-        dt = max(min(self.curr_time - self.prev_time, self.MAX_TIME), self.MIN_TIME) #Finding time change and clamping it
+
+        curr_time = self.clock.now() # if dt needs to be taken out just delete this section and add to func def
+        dt = curr_time-self.prev_time
+
+        #Clamping duration bc max min do not understand ROS2
+        if dt > self.MAX_TIME :
+            dt = self.MAX_TIME
+        elif dt < self.MIN_TIME :
+            dt = self.MIN_TIME
+
+        dt = dt.nanoseconds / 1e9
+
         p = self.kp * error #Calculate correction
-        i += self.ki * error * dt #Handle over time error
-        i = max(min(i, self.MAX_I), self.MIN_I) #Clamp I so not overshooting, picking out smallest num then biggest num
+
+        self.i += self.ki * error * dt #Handle over time error
+        self.i = max(min(self.i, self.MAX_I), self.MIN_I) #Clamp I so not overshooting, picking out smallest num then biggest num
+        
         derivative = (error - self.prev_error)/dt #Find derivative for d part
         d = self.kd * derivative #Handle overshoot
-        pid = p + i + d #Put it all together
+
+        pid = p + self.i + d #Put it all together
+
+        self.prev_time = curr_time #Update prev_time
         self.prev_error = error #Set new previous error
+
         return pid
     
     #Just in case error should be reset
     def reset_error(self) :
-        self.prevError = 0
+        self.prev_error = 0.0
