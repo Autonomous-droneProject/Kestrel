@@ -17,6 +17,7 @@
   <depend>GeographicLib</depend>
   <depend>control_toolbox</depend>
   <depend>mavros_msgs</depend>
+  <test_depend>ament_cmake_gtest</test_depend>
 
   <!-- Python deps -->
   <exec_depend>rclpy</exec_depend>
