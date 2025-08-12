@@ -16,24 +16,48 @@ find_package(mavros_msgs REQUIRED)
 # Include directory for headers
 include_directories(include)
 
+# Create library for reusable classes
+add_library(kestrel_control_lib
+  src/command_validator.cpp
+  src/frame_transformer.cpp
+)
+
+# Link lib to dependencies
+ament_target_dependencies(kestrel_control_lib
+  rclcpp
+  geometry_msgs
+  kestrel_msgs
+  sensor_msgs
+  mavros_msgs
+  control_toolbox
+  GeographicLib
+)
+
 # C++ node executables
 add_executable(ardupilot_translator_node src/ardupilot_translator_node.cpp)
-add_executable(command_validator src/command_validator.cpp)
+add_executable(command_validator_node src/command_validator_node.cpp)
 add_executable(dynamic_camera_control_node src/dynamic_camera_control_node.cpp)
-add_executable(frame_transformer src/frame_transformer.cpp)
+add_executable(frame_transformer_node src/frame_transformer_node.cpp)
 
 # Link dependencies
-ament_target_dependencies(ardupilot_translator_node "rclcpp" "geometry_msgs" "mavros_msgs")
-ament_target_dependencies(command_validator "rclcpp" "geometry_msgs")
-ament_target_dependencies(dynamic_camera_control_node "rclcpp" "geometry_msgs" "kestrel_msgs" "control_toolbox")
-ament_target_dependencies(frame_transformer rclcpp "rclcpp" "sensor_msgs" "geometry_msgs" "GeographicLib")
-target_link_libraries(frame_transformer GeographicLib::GeographicLib)
+#ament_target_dependencies(ardupilot_translator_node "rclcpp" "geometry_msgs" "mavros_msgs")
+#ament_target_dependencies(command_validator "rclcpp" "geometry_msgs")
+#ament_target_dependencies(dynamic_camera_control_node "rclcpp" "geometry_msgs" "kestrel_msgs" "control_toolbox")
+#ament_target_dependencies(frame_transformer rclcpp "rclcpp" "sensor_msgs" "geometry_msgs" "GeographicLib")
+#target_link_libraries(frame_transformer GeographicLib::GeographicLib)
+target_link_libraries(ardupilot_translator_node PUBLIC kestrel_control_lib)
+target_link_libraries(command_validator_node PUBLIC kestrel_control_lib)
+target_link_libraries(dynamic_camera_control_node PUBLIC kestrel_control_lib)
+target_link_libraries(frame_transformer_node PUBLIC kestrel_control_lib)
+
+
+
 # Install all compiled binaries
 install(TARGETS
   ardupilot_translator_node
-  command_validator
+  command_validator_node
   dynamic_camera_control_node
-  frame_transformer
+  frame_transformer_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -47,10 +71,9 @@ install(DIRECTORY python/kestrel_control
   DESTINATION lib/python3.12/site-packages/
 )
 
-#ament_add_gtest(test_command_validator test/test_command_validator.cpp)
-#ament_add_gtest(test_frame_transformer test/test_frame_transformer.cpp)
-#ament_target_dependencies(test_command_validator "rclcpp" "geometry_msgs")
-#ament_target_dependencies(test_frame_transformer "rclcpp" "geometry_msgs" "sensor_msgs")
-
+ament_add_gtest(test_command_validator test/test_command_validator.cpp)
+ament_add_gtest(test_frame_transformer test/test_frame_transformer.cpp)
+target_link_libraries(test_command_validator kestrel_control_lib)
+target_link_libraries(test_frame_transformer kestrel_control_lib)
 
 ament_package()

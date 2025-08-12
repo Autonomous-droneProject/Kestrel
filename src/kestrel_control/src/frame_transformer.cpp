@@ -52,12 +52,3 @@ void FrameTransformer::gps_callback(const sensor_msgs::msg::NavSatFix::SharedPtr
 }
 
 } // namespace kestrel_control
-
-int main(int argc, char *argv[])
-{
-    rclcpp::init(argc, argv);
-    auto node = std::make_shared<kestrel_control::FrameTransformer>();
-    rclcpp::spin(node);
-    rclcpp::shutdown();
-    return 0;
-}
