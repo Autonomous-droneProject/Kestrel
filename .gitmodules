@@ -3,7 +3,7 @@
 	url = https://github.com/mavlink/mavlink
 [submodule "src/libraries/mavros"]
 	path = src/libraries/mavros
-	url = https://github.com/Autonomous-droneProject/mavros.git
+	url = https://github.com/mavlink/mavros
 [submodule "src/driver/vl53l1x"]
 	path = src/driver/vl53l1x
 	url = https://github.com/Autonomous-droneProject/ROS2-VL53L1X.git
