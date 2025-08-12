@@ -97,12 +97,4 @@ bool CommandValidator::is_safe(const geometry_msgs::msg::Twist & command)
 
 } // namespace kestrel_control
 
-// Run node
-int main(int argc, char *argv[]) {
-  rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<kestrel_control::CommandValidator>());
-  rclcpp::shutdown();
-  return 0;
-}
-
 

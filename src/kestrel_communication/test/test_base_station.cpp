@@ -2,7 +2,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/string.hpp"
 #include "kestrel_msgs/srv/set_flight_mode.hpp"
-#include "kestrel_communication/base_station_node.hpp"
+#include "kestrel_communication/base_station.hpp"
 #include <memory>
 
 class BaseStationTest : public ::testing::Test
