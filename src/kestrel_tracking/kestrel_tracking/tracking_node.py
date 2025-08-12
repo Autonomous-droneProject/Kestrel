@@ -3,11 +3,10 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 from filterpy.kalman import KalmanFilter as FP_KalmanFilter
 from cv_bridge import CVBridge
-from vision_msgs.msg import Detection2DArray
+from kestrel_msgs.msg import DetectionArray, Track, TrackArray
 from ultralytics import YOLO
 import numpy as np
 from scipy.optimize import linear_sum_assignment
-from custom_msgs.msg import TrackArray, Track
 from typing import List, Tuple, Sequence
 from numpy.linalg import inv
 from scipy.stats import chi2
@@ -18,12 +17,9 @@ import json
 #This function converts the center and size of the bounding box into the format [x1, y1, x2, y2]
 #where (x1, y1) is the top-left corner and (x2, y2) is the bottom-right corner.
 def det2bbox(det): 
-    """Extract [x1,y1,x2,y2] from a vision_msgs/Detection2D."""
+    """Extract [x1,y1,x2,y2] from a kestrel_msgs/msg/EmbeddedDetection2D."""
     # extract and return the center directly from th vision msgs
-    center_x = det.center_x
-    center_y = det.center_y
-    return [center_x, center_y]
-    
+    return [int(det.x1), int(det.y1), int(det.x2), int(det.y2)] 
 
 def bbox2state(bbox):
     """Convert bbox → Kalman state vector. Convert [x1,y1,x2,y2] → [cx, cy, w, h] """
@@ -152,10 +148,6 @@ class Track:
         #    Small value → assume near‐constant velocity
         self.kf.Q = np.eye(self.kf.dim_x) * 0.01
     
-        
-        
-        
-
 
     def predict(self) -> List[int]:
         #1. predict
@@ -247,12 +239,12 @@ class TrackingNode(Node):
                 w_motion = 0.5, #Weight for motion cost
                 w_app = 0.5 #Weight for appearance cost
             )
-            self.sub_det = self.create_subscription(Detection2DArray, '/kestrel/detections', self.dets_cb, 10)
+            self.sub_det = self.create_subscription(DetectionArray, '/kestrel/detections', self.dets_cb, 10)
             self.pub_tracks = self.create_publisher(TrackArray, '/kestrel/tracks', 10)
             # Initialize Kalman filter class here
             self.kf = FP_KalmanFilter(dim_x=8, dim_z=4)
 
-    def dets_cb(self, det_msg:Detection2DArray):
+    def dets_cb(self, det_msg:DetectionArray):
         # 1. Predict all tracks
         self.track_manager.predict_all()
         # extract appearance features from the cnn
@@ -296,7 +288,7 @@ class TrackingNode(Node):
         
 
         #4 Build and Publish
-        self.pub_tracks.publish(track_array_msg)
+        self.pub_tracks.publish(TrackArray)
 
 '''
 def main(args=None):
