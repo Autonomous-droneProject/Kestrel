@@ -19,18 +19,11 @@ import json
 #where (x1, y1) is the top-left corner and (x2, y2) is the bottom-right corner.
 def det2bbox(det): 
     """Extract [x1,y1,x2,y2] from a vision_msgs/Detection2D."""
-    bbox = det.bbox
-    center_x = bbox.center.x
-    center_y = bbox.center.y
-    width = bbox.size_x
-    height = bbox.size_y
-
-    x1 = center_x - width/2
-    y1 = center_y - height/2
-    x2 = center_x + width/2
-    y2 = center_y + height/2
-
-    return [int(x1), int(y1), int(x2), int(y2)]
+    # extract and return the center directly from th vision msgs
+    center_x = det.center_x
+    center_y = det.center_y
+    return [center_x, center_y]
+    
 
 def bbox2state(bbox):
     """Convert bbox → Kalman state vector. Convert [x1,y1,x2,y2] → [cx, cy, w, h] """
