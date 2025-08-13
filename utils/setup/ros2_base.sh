@@ -40,6 +40,8 @@ sudo apt install -y ros-jazzy-desktop ros-dev-tools
 echo "Sourcing ROS 2 setup file and adding to .bashrc..."
 source /opt/ros/jazzy/setup.bash
 echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc
+echo "export ROS_DISTRO=jazzy" >> ~/.bashrc
+
 
 echo "ROS 2 Jazzy installation and setup complete!"
 
