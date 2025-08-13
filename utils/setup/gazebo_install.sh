@@ -59,22 +59,9 @@ echo
 echo "Updating APT cache..."
 sudo apt-get update -y
 
-# If gz-harmonic already installed, report and exit normally
-if dpkg -s gz-harmonic >/dev/null 2>&1; then
-  echo
-  echo "gz-harmonic already installed. Verifying 'gz' command..."
-  if command -v gz >/dev/null 2>&1; then
-    echo "'gz' found at: $(command -v gz)"
-    echo "Done."
-    exit 0
-  else
-    echo "Package registered but 'gz' binary not found in PATH; attempting reinstall..."
-  fi
-fi
-
-echo
-echo "Installing gz-harmonic (non-interactive)..."
 sudo apt-get install -y gz-harmonic
+sudo apt-get install -y ros-jazzy-gz-tools-vendor ros-jazzy-gz-sim-vendor
+. /opt/ros/jazzy/setup.bash
 
 echo
 echo "Post-install verification..."
