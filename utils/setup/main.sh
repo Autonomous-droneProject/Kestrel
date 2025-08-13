@@ -33,11 +33,6 @@ echo ""
 # --- Run the installation scripts in the specified order ---
 # Each script is called using its full path.
 
-echo "--- Running new_user.sh ---"
-sudo "$SCRIPT_DIR/ros_install/new_user.sh"
-if [ $? -ne 0 ]; then echo "ERROR: new_user.sh failed. Aborting." >&2; exit 1; fi
-echo ""
-
 echo "--- Running ros2_base.sh ---"
 bash "$SCRIPT_DIR/ros_install/ros2_base.sh"
 if [ $? -ne 0 ]; then echo "ERROR: ros2_base.sh failed. Aborting." >&2; exit 1; fi
