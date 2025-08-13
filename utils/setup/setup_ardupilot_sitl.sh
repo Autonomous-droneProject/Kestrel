@@ -174,12 +174,10 @@ fi
 # Remove existing marker block if present (safe idempotent replace)
 # Use awk to avoid regex pitfalls
 awk -v start="$MARKER_START" -v end="$MARKER_END" '
-  BEGIN {in=0}
-  {
-    if ($0 == start) { in=1; next }
-    if ($0 == end)   { in=0; next }
-    if (!in) print
-  }
+  BEGIN { in_block = 0 }
+  $0 == start { in_block = 1; next }
+  $0 == end   { in_block = 0; next }
+  !in_block { print }
 ' "$BASHRC" > "${BASHRC}.tmp" && mv "${BASHRC}.tmp" "$BASHRC"
 
 
