@@ -45,7 +45,6 @@ echo ""
 
 echo "--- Running clone_ws.sh ---"
 bash "$SCRIPT_DIR/src_install/clone_ws.sh"
-if [ $? -ne 0 ]; then echo "ERROR: clone_ws.sh failed. Aborting." >&2; exit 1; fi
 echo ""
 
 echo "--- Running install_build_depend.sh ---"
