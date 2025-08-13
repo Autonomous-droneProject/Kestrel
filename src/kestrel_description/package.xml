@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="3">
+  <!-- Updated to Remove ROS 1 Formatting, Now Adheres to ROS 2 -->
+  <name>kestrel_description</name>
+  <version>1.0.0</version>
+  <description>
+    URDF Description package for Kestrel Drone. Contains URDF, meshes, launch files, and configs.
+  </description>
+  <maintainer email="da364739@ucf.edu">David Orjuela</maintainer>
+  <license>MIT</license>
+
+  <!-- Runtime dependencies -->
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+  <exec_depend>joint_state_publisher_gui</exec_depend>
+  <exec_depend>gazebo_ros</exec_depend>
+
+  <export>
+    <architecture_independent/>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
