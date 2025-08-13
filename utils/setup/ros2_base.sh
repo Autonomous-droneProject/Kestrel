@@ -47,8 +47,3 @@ echo "ROS 2 Jazzy installation and setup complete!"
 echo "Verifying installation with a demo talker and listener..."
 echo "Open a new terminal and run 'ros2 run demo_nodes_cpp talker' and 'ros2 run demo_nodes_py listener' in another."
 echo "You should see messages being published and received."
-
-To use this script, save it as a file (e.g., `install_ros2_jazzy.sh`), make it executable with `chmod +x install_ros2_jazzy.sh`, and then run it with `sudo ./install_ros2_jazzy.sh`.
-
-You can also find a video guide on [how to install ROS2 Jazzy on Ubuntu 24.04](https://www.youtube.com/watch?v=ZGds6NuZLzo), which covers the same steps as this script.
-http://googleusercontent.com/youtube_content/4
