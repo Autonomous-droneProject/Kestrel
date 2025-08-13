@@ -34,7 +34,7 @@ echo ""
 # Each script is called using its full path.
 
 echo "--- Running new_user.sh ---"
-bash "$SCRIPT_DIR/ros_install/new_user.sh"
+sudo "$SCRIPT_DIR/ros_install/new_user.sh"
 if [ $? -ne 0 ]; then echo "ERROR: new_user.sh failed. Aborting." >&2; exit 1; fi
 echo ""
 

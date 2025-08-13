@@ -20,27 +20,12 @@ echo "Target Directory: $TARGET_DIR"
 # 2. Check if the target directory already exists
 if [ -d "$TARGET_DIR" ]; then
     echo ""
-    echo "Error: The target directory '$TARGET_DIR' already exists."
+    echo "Warning: The target directory '$TARGET_DIR' already exists."
     echo "Please remove or rename the directory before running this script."
-    echo "Exiting..."
-    exit 1
+    echo "Continuing"
 fi
 
 # 3. Perform the git clone operation
 echo ""
 echo "Cloning the repository into '$TARGET_DIR'..."
 git clone "$REPO_URL" "$TARGET_DIR" --recurse-submodules
-
-# 4. Check if the clone was successful
-if [ $? -eq 0 ]; then
-    echo "--------------------------------------------------------"
-    echo "Success: The repository has been cloned."
-    echo "You can now navigate to the directory using: cd ~/Kestrel"
-    echo "--------------------------------------------------------"
-else
-    echo "--------------------------------------------------------"
-    echo "Error: Failed to clone the repository."
-    echo "Please check the URL and ensure you have the necessary permissions."
-    echo "--------------------------------------------------------"
-    exit 1
-fi
