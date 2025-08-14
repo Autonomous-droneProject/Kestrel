@@ -7,8 +7,10 @@ SWAP_FILE="/swapfile_temp"
 
 # Check if a swap file already exists and if so, exit
 if [ -f "$SWAP_FILE" ]; then
-    echo "Swap file already exists at $SWAP_FILE. Exiting."
-    exit 1
+    echo "Swap file already exists at $SWAP_FILE. Enabling swap file."
+    sudo swapon "$SWAP_FILE"
+    echo "Done. This swap file will be active until the next WSL shutdown."
+    exit 0
 fi
 
 # Create a new, empty file of the specified size

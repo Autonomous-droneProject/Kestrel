@@ -61,7 +61,9 @@ sudo apt-get update -y
 
 sudo apt-get install -y gz-harmonic
 sudo apt-get install -y ros-jazzy-gz-tools-vendor ros-jazzy-gz-sim-vendor
-. /opt/ros/jazzy/setup.bash
+set +u
+source /opt/ros/jazzy/setup.bash
+set -u
 
 echo
 echo "Post-install verification..."
