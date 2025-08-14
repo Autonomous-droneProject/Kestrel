@@ -48,12 +48,12 @@ if [ $? -ne 0 ]; then echo "ERROR: install_build_depend.sh failed. Aborting." >&
 echo ""
 
 echo "--- Running build_add_swap.sh ---"
-bash "$SCRIPT_DIR/ros_install/build_add_swap.sh"
+bash "$SCRIPT_DIR/src_build/build_add_swap.sh"
 if [ $? -ne 0 ]; then echo "ERROR: build_add_swap.sh failed. Aborting." >&2; exit 1; fi
 echo ""
 
 echo "--- Running build_colcon_workspace.sh ---"
-bash "$SCRIPT_DIR/ros_install/build_colcon_workspace.sh"
+bash "$SCRIPT_DIR/src_build/build_colcon_workspace.sh"
 if [ $? -ne 0 ]; then echo "ERROR: build_colcon_workspace.sh failed. Aborting." >&2; exit 1; fi
 echo ""
 
