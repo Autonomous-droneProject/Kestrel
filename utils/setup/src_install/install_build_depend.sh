@@ -11,6 +11,8 @@ set -e
 ROS_DISTRO="jazzy"
 # Set the workspace directory
 WORKSPACE_DIR="$HOME/Kestrel"
+# Set the virtual environment directory
+VENV_DIR="$HOME/kestrel_venv"
 # --- End of Configuration ---
 
 echo "--------------------------------------------------------"
@@ -47,13 +49,13 @@ sudo apt install -y \
   ros-jazzy-ros2-controllers
 
 # Create virtual environment if it doesn't exist
-if [ ! -d "venv" ]; then
-    python3 -m venv venv
-    echo "Virtual environment 'venv' created."
+if [ ! -d "$VENV_DIR" ]; then
+    python3 -m venv "$VENV_DIR"
+    echo "Virtual environment '$VENV_DIR' created."
 fi
 
 # Activate the virtual environment
-source venv/bin/activate
+source "$VENV_DIR/bin/activate"
 echo "Virtual environment activated."
 
 # 4. Install Python dependencies using pip
@@ -63,7 +65,11 @@ pip install \
   pyyaml \
   typeguard \
   'setuptools<80' \
-  catkin_pkg
+  catkin_pkg \
+  empy \
+  numpy \
+  Cython \
+  colcon-common-extensions
 
 # 5. Initialize and update rosdep
 echo "Initializing and updating rosdep database..."
@@ -74,13 +80,14 @@ rosdep update
 
 # 6. Install ROS 2 dependencies
 echo "Installing all ROS 2 dependencies from packages in 'src'..."
+# The rosdep command will still work from the workspace directory
 sudo rosdep install --rosdistro $ROS_DISTRO --from-paths src --ignore-src -r -y
 deactivate
 
 echo "--------------------------------------------------------"
 echo "  Dependency installation and virtual environment setup complete."
 echo "--------------------------------------------------------"
-echo "Note: The virtual environment now exists."
-echo "To activate it in new terminals, run: source $WORKSPACE_DIR/venv/bin/activate"
+echo "Note: The virtual environment now exists at '$VENV_DIR'."
+echo "To activate it in new terminals, run: source $VENV_DIR/bin/activate"
 echo "To deactivate it, run: deactivate"
 echo "--------------------------------------------------------"

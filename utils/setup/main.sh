@@ -32,10 +32,6 @@ echo ""
 
 # --- Run the installation scripts in the specified order ---
 # Each script is called using its full path.
-echo "--- Running setup_permissions ---"
-bash "$SCRIPT_DIR/ros_install/setup_permissions.sh"
-if [ $? -ne 0 ]; then echo "ERROR: setup_permissions.sh failed. Aborting." >&2; exit 1; fi
-echo ""
 
 echo "--- Running ros2_base.sh ---"
 bash "$SCRIPT_DIR/ros_install/ros2_base.sh"
