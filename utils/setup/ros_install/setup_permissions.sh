@@ -17,13 +17,6 @@ is_wsl() {
 
 echo "--- WSL Git Permissions Configurator ---"
 
-# Check if the script is running inside WSL
-if ! is_wsl; then
-    echo "ERROR: This script must be run from within a WSL environment."
-    echo "Please open a WSL terminal (e.g., Ubuntu) and run this script from there."
-    exit 2 # Use a different exit code for this specific error
-fi
-
 # Check for root permissions
 if [ "$(id -u)" -ne 0 ]; then
     echo "This script requires root permissions to modify /etc/wsl.conf."

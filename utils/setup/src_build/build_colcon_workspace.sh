@@ -10,8 +10,9 @@ set -e
 # Store the original directory so we can return to it later.
 ORIGINAL_DIR=$(pwd)
 
-# Define the workspace directory.
+# Define the workspace and virtual environment directories.
 WORKSPACE_DIR="$HOME/Kestrel"
+VENV_DIR="$HOME/kestrel_venv"
 
 echo "--------------------------------------------------------"
 echo "  ROS 2 Workspace Builder for Kestrel (with venv)"
@@ -27,14 +28,13 @@ fi
 cd "$WORKSPACE_DIR"
 
 # 2. Activate the Python virtual environment
-# This must be done before sourcing the main ROS 2 environment.
 echo "Activating Python virtual environment..."
-if [ ! -d "venv" ]; then
-    echo "Error: Virtual environment 'venv' not found."
+if [ ! -d "$VENV_DIR" ]; then
+    echo "Error: Virtual environment '$VENV_DIR' not found."
     echo "Please run the dependency installation script first: install_kestrel_depend_venv.sh"
     exit 1
 fi
-source venv/bin/activate
+source "$VENV_DIR/bin/activate"
 
 # 3. Source the main ROS 2 environment
 # This path is for ROS 2 Jazzy on Ubuntu 24.04. Adjust if needed.
@@ -49,7 +49,10 @@ fi
 
 # 4. Run colcon build
 echo "Running colcon build..."
-colcon build --symlink-install --continue-on-error --packages-skip my-test-package
+colcon build \
+  --symlink-install \
+  --cmake-args -DCMAKE_BUILD_TYPE=Release \
+  --continue-on-error
 
 # 5. Source the local workspace setup file
 echo "Sourcing the local workspace environment..."
@@ -64,6 +67,6 @@ echo "  Build successful! You are back in your original location."
 echo "--------------------------------------------------------"
 echo "To use your packages in a new terminal, remember to:"
 echo "  1. Navigate to your workspace: cd ~/Kestrel"
-echo "  2. Activate your virtual environment: source venv/bin/activate"
+echo "  2. Activate your virtual environment: source $VENV_DIR/bin/activate"
 echo "  3. Source the workspace: source install/setup.bash"
 echo "--------------------------------------------------------"
