@@ -3,7 +3,6 @@
 This file will create the clustering node which will send a message called TrackCenter.msg to the next node
 This node susbcribes to the input node and publishes to the next node
 '''
-
 import rclpy #ROS Common Library Python
 from rclpy.node import Node
 from kestrel_msgs.msg import TrackCenter
@@ -57,7 +56,7 @@ class ClusteringNode(Node):
         x1, y1, x2, y2 = self.minimum_bounding_rectangle(input_message)
         
         #Calculate the center and the extents of the minimum bounding rectangle
-        center_x, center_y = self.calculate_center(x1, y2, x2, y2)
+        center_x, center_y = self.calculate_center(x1, y1, x2, y2)
         
         #Initialize the output message
         output_message = TrackCenter()
