@@ -3,7 +3,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 from filterpy.kalman import KalmanFilter as FP_KalmanFilter
 from cv_bridge import CVBridge
-from kestrel_msgs.msg import DetectionArray, Track, TrackArray
+from kestrel_msgs.msg import DetectionArray, Track as TrackMsg, TrackArray
 from ultralytics import YOLO
 import numpy as np
 from scipy.optimize import linear_sum_assignment
@@ -65,12 +65,26 @@ def mahalanobis_gate(kalmanFilter, det_bbox, innovation_covariance, thresh):
 
     return distance_squared < thresh
 
-def build_cost_matrix(tracks, detections, w_motion, w_app):
+def appearance_cost(track, det_feature):
+    # cosine distance = 1 - cosine similarity
+    if track.feature is None:
+        return 1.0  # max cost if no feature
+    f1 = track.feature / np.linalg.norm(track.feature)
+    f2 = det_feature / np.linalg.norm(det_feature)
+    return 1.0 - np.dot(f1, f2)
+
+def build_cost_matrix(tracks, detections,features, w_motion, w_app):
     """Combine motion & appearance costs into an (N×M) matrix."""
     N = len(tracks)
     M = len(detections)
     cost = np.zeros((N, M))
     # TODO: fill cost[i,j] = w_motion*motion_cost + w_app*appearance_cost
+    
+    for i,track in enumerate(tracks):
+            for j,det_bbox in enumerate(detections):
+                mc = motion_cost(track,det_bbox)
+                ac = appearance_cost(track,features[j])
+                cost[i,j] = w_motion * mc + w_app * ac
     return cost
 
 def assign_detections(cost_matrix):
@@ -172,6 +186,8 @@ class Track:
 
         self.feature = feature
         self.missed = 0
+        #update the amount of tiems a track has been matched to a detection
+        self.hits += 1
         
         return self.bbox
 
@@ -277,20 +293,51 @@ class TrackingNode(Node):
         
         #Hungarian algorithm to find optimal assignments
         matches, unmatched_tracks, unmatched_dets = assign_detections(cost_matrix)
-        # HUNGARIAN ALGORITHM:
-        # Solves assignment problem - optimally assigns tracks to detections
-        # INPUT: Cost matrix[i,j] = cost of assigning track i to detection j  
-        # OUTPUT: Optimal assignments minimizing total cost
         
 
         # 3. Update tracks or create new tracks
         
-        
+        #we assume that each track has the following features that we must update or delete based on whether the tracker
+        #gets matched for N frames
+
+        #Update matched tracks
+        for trk_idx, det_idx in matches:
+            trk = self.track_manager.tracks[trk_idx]
+            #update every feature of a track, meaning the bboxes & features
+            trk.update(detection_bboxes[det_idx], detection_features[det_idx])
+            
+        #Create new tracks for any unmatched detections
+        for det_idx in unmatched_dets:
+            new_track = Track(self.track_manager.next_id, detection_bboxes[det_idx])
+            new_track.feature = detection_features[det_idx]
+            self.track_manager.tracks.append(new_track)
+            self.track_manager.next_id +=1
+
+
+        #Remove any track with missed > max_age
+        self.track_manager.tracks = [
+            trk for trk in self.track_manager.tracks
+            if trk.missed <= self.track_manager.max_age
+        ]
+
 
         #4 Build and Publish
-        self.pub_tracks.publish(TrackArray)
+        track_array_msg = TrackArray()
+        track_array_msg.header = det_msg.header            
+        # track_array_msg.tracks.append(to_track_msg(track))  #TODO adding tracks as needed
+        for trk in self.track_manager.tracks:
+            if trk.hits >= self.track_manager.min_hits:
+                track_msg = TrackMsg()
+                track_msg.id = trk.id
+                track_msg.x1 = float(trk.bbox[0])
+                track_msg.y1 = float(trk.bbox[1])
+                track_msg.x2 = float(trk.bbox[2])
+                track_msg.y2 = float(trk.bbox[3])
+                track_array_msg.tracks.append(track_msg)
 
-'''
+        self.pub_tracks.publish(track_array_msg)         # publish the instance
+
+
 def main(args=None):
     rclpy.init(args=args)
     node = TrackingNode()
@@ -300,11 +347,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-'''
-#goals 
 
-#Kalman Filter
-
-#function must have prediction phase and correction phase update phase)
-
-#mahalanobis gating
