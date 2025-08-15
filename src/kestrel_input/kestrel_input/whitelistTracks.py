@@ -17,12 +17,14 @@ class InputNode(Node):
     def __init__(self):
         super().__init__('input_node')
         self.tracks = []
-        """
-        I think we need to keep track of multiple frames bc of latency. We match tracks and detections
-        at frame 10, but camera may now be at frame 20. So we need to go to image from frame 10 to get
-        the bboxes from there
-        """
-        self.latest_frame = None
+        
+        # Short history of previous images, with timestamp as key
+        self.images = {}
+        self.image_buffer_size = 30 # decide max size
+
+        # Will be used to store the raw image linked to current batch of tracks (using timestamp)
+        # we can then crop this image based on coordinates from each track
+        self.image_to_display = None
 
         self.bridge = CvBridge()
         self.selected_tracks = set() # Used to know which tracks the user has selected to follow
@@ -34,21 +36,42 @@ class InputNode(Node):
         self.pub_input = self.create_publisher(TrackArray, '/kestrel/whitelist_tracks', 10)
 
     def image_callback(self, msg: Image):
-        self.latest_frame = self.bridge.imgmsg_to_cv2(msg, "bgr8")
+        # convert to nano sec
+        timestamp = msg.header.stamp.sec * 1e9 + msg.header.nanosec
+        frame = self.bridge.imgmsg_to_cv2(msg, "bgr8")
+
+        self.images[timestamp] = frame
+
+        # Shrink the size of images stored
+        if len(self.images) > self.image_buffer_size:
+            oldest_frame = min(self.images.keys())
+            del self.images[oldest_frame]
+
 
     def tracking_callback(self, msg):
-        self.tracks = msg.tracks
+        timestamp = msg.header.stamp.sec * 1e9 + msg.header.nanosec
+
+        # current set of tracks was linked to this timestamp
+        if timestamp in self.images:
+            # use this image to associate with this set of tracks
+            self.image_to_display = self.images[timestamp]
+
+            self.tracks = msg.tracks
+
 
     # handles loop for gui
     def run_gui(self):
-        """
-        1. get track ids from self.tracks
-        2. Remove tracks that no longer exist, but are still displayed (self.displayed_tracks)
-        3. Display current tracks
-           - use timestamps to match image and tracks. Then we can get the corresponding image and crop
-           it based on the bbox coordinates from tracking node (x1, y1, x2, y2)
-        """
+        # maybe make local copies of class variables from above for overriding reasons (image_to_display, tracks)
+        # new tracks/raw image override existing data, so we need to stop race conditions
 
+        if self.image_to_display:
+            # prepare image to get cropped if needed
+            # check if self.displayed_tracks has some tracks that no longer exist
+            # crop bboxs from self.image_to_display and display them
+            # handle user clicks 
+            pass
+
+        # probably change this depending on what we do above, but this is the main idea
         if self.selected_tracks:
             selected = []
             for track in self.tracks:
