@@ -25,38 +25,45 @@ class ClusteringNode(Node):
         self.publisher_ = self.create_publisher(TrackCenter, published_topic, queue_size)
         
     
-    def calculate_center(self, x1, y1, x2, y2):
+    def _calculate_center(self, x1, y1, x2, y2):
         return (x1+x2)/2 , (y1+y2)/2
         
     
-    def minimum_bounding_rectangle(self, input_message):
+    def _minimum_bounding_rectangle(self, input_message):
+        #Image coordinate system involves top left of the frame being the origin
         min_x = float('inf')
         max_x = float('-inf')
         min_y = float('inf')
         max_y = float('-inf')
-         
-        for Track in input_message.tracks:
+
+        for track in input_message.tracks:
 
             #Instead of comparing 8 points, we realized that we can half that number with the following logic:
             #Take max_x for example, x2 being the bottom-right corner of any bbox, meaning it's x value will always be larger than x1
-            #So we need only comopare max_x with x2 and there is no need to compare max_x with x1. This logic applies both ways for all points
-            max_x= Track.x2 if Track.x2 > max_x else max_x
-            
-            min_x= Track.x1 if Track.x1 < min_x else min_x
+            #So we need only compare max_x with x2 and there is no need to compare max_x with x1. This logic applies both ways for all points
+            max_x = track.x2 if track.x2 > max_x else max_x
+            min_x = track.x1 if track.x1 < min_x else min_x
+            max_y = track.y2 if track.y2 > max_y else max_y
+            min_y = track.y1 if track.y1 < min_y else min_y
 
-            max_y= Track.y2 if Track.y2 > max_y else max_y
-            
-            min_y= Track.y1 if Track.y1 < min_y else min_y
-            
         
-        return min_x, min_y, max_x, max_y
+        if min_x == float('inf'):
+            return None
+        
+        return (min_x, min_y, max_x, max_y)
     
 
-    def publish_center(self, input_message: TrackArray):
-        x1, y1, x2, y2 = self.minimum_bounding_rectangle(input_message)
+    def _publish_center(self, input_message: TrackArray):
+        rectangle = self._minimum_bounding_rectangle(input_message)
+        
+        if rectangle == None:
+            self.get_logger().debug("No tracks in message. Skipping publish.")
+            return
+        
+        x1, y1, x2, y2 = rectangle
         
         #Calculate the center and the extents of the minimum bounding rectangle
-        center_x, center_y = self.calculate_center(x1, y1, x2, y2)
+        center_x, center_y = self._calculate_center(x1, y1, x2, y2)
         
         #Initialize the output message
         output_message = TrackCenter()
@@ -81,7 +88,7 @@ class ClusteringNode(Node):
             
     def vision_callback(self, input_message: TrackArray):
         self.get_logger().info(f'Received: {input_message}')
-        self.publish_center(input_message) #Call the function that will then create the TrackCenter message and publish it
+        self._publish_center(input_message) #Call the function that will then create the TrackCenter message and publish it
         
 
 def main():
