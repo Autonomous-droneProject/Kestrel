@@ -1,86 +1,88 @@
-# Clustering node will subscribe to the tracking node and emit a message called TrackCentroid.msg using ROS2 Jazzy
+# Clustering node will subscribe to the tracking node and emit a message called TrackCenter.msg using ROS2 Jazzy
 '''
-This file will create the clustering node which will send a message called TrackCentroid.msg to the Camera Node
-This node susbcribes to the vision node and publishes to the camera node
+This file will create the clustering node which will send a message called TrackCenter.msg to the next node
+This node susbcribes to the input node and publishes to the next node
 '''
 
 import rclpy #ROS Common Library Python
 from rclpy.node import Node
-from kestrel_msgs.msg import TrackCentroid
-from kestrel_msgs.msg import ClusteringInput
-from kestrel_msgs.msg import ClusteringInputArray
+from kestrel_msgs.msg import TrackCenter
+from kestrel_msgs.msg import TrackArray
 
+
+#GLOBAL VARIABLES
+#Topics
+subscribed_topic = "/kestrel/whitelist_tracks" #David may need to change this once the input node is implemented
+published_topic = "/kestrel/track_center" #The next node in the ROS graph needs to subscribe to this one
 
 
 class ClusteringNode(Node):
     def __init__(self): #Constructor
         super().__init__('clustering_node') #Create a node in the ROS graph
         
-        queue_size = 10 # Placeholder queue size
-        
-        self.subscription = self.create_subscription(ClusteringInputArray, '/kestrel/detections', self.vision_callback, queue_size)
-        self.publisher_ = self.create_publisher(TrackCentroid, "/kestrel/centroid", queue_size)
+        queue_size = 10 # Default queue size
+
+        self.subscription = self.create_subscription(TrackArray, subscribed_topic, self.vision_callback, queue_size)
+        self.publisher_ = self.create_publisher(TrackCenter, published_topic, queue_size)
         
     
-    def calculate_centroid(self,bbox):
-    
-        x1, y1= bbox[0]
-        x2, y2 = bbox[1]
+    def calculate_center(self, x1, y1, x2, y2):
+        return (x1+x2)/2 , (y1+y2)/2
         
-        print("Calculating centroid...")
-        print(x1, x2, y1, y2)
-        
-        centroid = (x1+x2)//2 , (y1+y2)//2
-
-        return centroid
     
-    def minimum_bounding_rectangle(msg):
-         
-        for ClusteringInput in msg.input_array:
-            max_x= ClusteringInput.x2 if ClusteringInput.x2 > max_x else max_x
-            # max_x= ClusteringInput.x1 if ClusteringInput.x1 > max_x else max_x 
-
-            # min_x= ClusteringInput.x2 if ClusteringInput.x2 < min_x else min_x
-            min_x= ClusteringInput.x1 if ClusteringInput.x1 < min_x else min_x #
-
-            max_y= ClusteringInput.y2 if ClusteringInput.y2 > max_y else max_y #
-            # max_y= ClusteringInput.y1 if ClusteringInput.y1 > max_y else max_y 
-
-            # min_y= ClusteringInput.y2 if ClusteringInput.y2 < min_y else min_y
-            min_y= ClusteringInput.y1 if ClusteringInput.y1 < min_y else min_y #
-            
-        
-        bounding_boxes = ((min_x, min_y), (max_x, max_y))
-    
-    def publish_centroid(self, msg: ClusteringInputArray):
+    def minimum_bounding_rectangle(self, input_message):
         min_x = float('inf')
         max_x = float('-inf')
         min_y = float('inf')
         max_y = float('-inf')
-        
-        bounding_boxes = self.minimum_bounding_rectangle(msg)
-        
-        center_x, center_y = self.calculate_centroid(bounding_boxes)
-        
-        track_centroid = TrackCentroid()
-        track_centroid.header = msg.header
-        
-        track_centroid.center_x = center_x
-        track_centroid.center_y = center_y
+         
+        for Track in input_message.tracks:
 
-        track_centroid.x1 = min_x
-        track_centroid.x2 = max_x
-        track_centroid.y1 = min_y
-        track_centroid.y2 = max_y
+            #Instead of comparing 8 points, we realized that we can half that number with the following logic:
+            #Take max_x for example, x2 being the bottom-right corner of any bbox, meaning it's x value will always be larger than x1
+            #So we need only comopare max_x with x2 and there is no need to compare max_x with x1. This logic applies both ways for all points
+            max_x= Track.x2 if Track.x2 > max_x else max_x
+            
+            min_x= Track.x1 if Track.x1 < min_x else min_x
+
+            max_y= Track.y2 if Track.y2 > max_y else max_y
+            
+            min_y= Track.y1 if Track.y1 < min_y else min_y
+            
         
-        self.publisher_.publish(track_centroid)
-        self.get_logger().info(f'Publishing: {track_centroid}')
+        return min_x, min_y, max_x, max_y
+    
+
+    def publish_center(self, input_message: TrackArray):
+        x1, y1, x2, y2 = self.minimum_bounding_rectangle(input_message)
+        
+        #Calculate the center and the extents of the minimum bounding rectangle
+        center_x, center_y = self.calculate_center(x1, y2, x2, y2)
+        
+        #Initialize the output message
+        output_message = TrackCenter()
+
+        #Default parameters that come from the TrackArray message
+        output_message.header = input_message.header
+
+        #Newly calculated parameters, unique to the clustering node:
+        #Top left corner and bottom right corner
+        output_message.x1 = x1
+        output_message.y1 = y1
+        output_message.x2 = x2
+        output_message.y2 = y2
+
+        #Center of the minimum bounding rectangle
+        output_message.center_x = center_x
+        output_message.center_y = center_y
+
+        self.publisher_.publish(output_message)
+        self.get_logger().info(f'Publishing: {output_message}')
             
             
-    def vision_callback(self, msg: ClusteringInput):
-        self.get_logger().info(f'Received: {msg}')
-        
-        self.publish_centroid(msg)
+    def vision_callback(self, input_message: TrackArray):
+        self.get_logger().info(f'Received: {input_message}')
+        self.publish_center(input_message) #Call the function that will then create the TrackCenter message and publish it
         
 
 def main():
@@ -95,4 +97,3 @@ def main():
     
 if __name__ == "__main__":
     main()
-        

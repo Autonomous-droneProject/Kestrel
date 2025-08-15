@@ -22,7 +22,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/SensorArray.msg"
   "msg/SensorReading.msg"
   "msg/SystemHealth.msg"
-  "msg/TrackCentroid.msg"
+  "msg/TrackCenter.msg"
   "srv/CalibrateCamera.srv"
   "srv/GetSystemStatus.srv"
   "srv/ResetSensors.srv"
