@@ -69,7 +69,8 @@ pip install \
   empy \
   numpy \
   Cython \
-  colcon-common-extensions
+  colcon-common-extensions \
+  lark \
 
 # 5. Initialize and update rosdep
 echo "Initializing and updating rosdep database..."
