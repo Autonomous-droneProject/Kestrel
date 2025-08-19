@@ -1,0 +1,14 @@
+# tuning parameters (gains) for the PID controllers
+
+camera_control_pid:
+  # pid gains for the pan (left/right) axis
+  pan:
+    p: 1.2 # proportional gain, how strongly it reacts to current error
+    i: 0.1 # integral gain, corrects for past, steady-state errors
+    d: 0.05 # derivative gain, dampens oscillations and overshooting
+
+  # pid gains for the tilt (up/down) axis
+  tilt:
+    p: 1.5
+    i: 0.1
+    d: 0.08

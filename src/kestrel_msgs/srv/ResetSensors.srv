@@ -1,4 +1,9 @@
-# Empty request
----
+# Service to restart and re-initialize one or more sensors.
 
-# Empty response
+# Request
+# A list of sensor_ids to reset. If empty, reset all sensors.
+string[] sensor_ids
+---
+# Response
+bool success
+string message # example.. like "Successfully reset 3 sensors" or "Error: sensor 'tof_front' failed to respond"
