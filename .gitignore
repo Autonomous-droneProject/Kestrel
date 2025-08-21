@@ -9,7 +9,8 @@ src/_archive_legacy/models/deepSORT/CNN/YOLO Demo/*.mov
 __pycache__/
 *.py[cod]
 *$py.class
-
+.gitignore
+.DS_Store
 # C extensions
 *.so
 
