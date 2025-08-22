@@ -36,7 +36,7 @@
                 </material>
             </visual>
             <sensor name='gpu_lidar' type='gpu_lidar'>
-                <topic>lidar/45dfl</topic>
+                <topic>lidar/l45dfl</topic>
                 <update_rate>10</update_rate>
                 <lidar>
                     <scan>
@@ -176,7 +176,7 @@
                 </material>
             </visual>
             <sensor name='gpu_lidar' type='gpu_lidar'>
-                <topic>lidar/45dfr</topic>
+                <topic>lidar/l45dfr</topic>
                 <update_rate>10</update_rate>
                 <lidar>
                     <scan>
@@ -316,7 +316,7 @@
                 </material>
             </visual>
             <sensor name='gpu_lidar' type='gpu_lidar'>
-                <topic>lidar/45drr</topic>
+                <topic>lidar/l45drr</topic>
                 <update_rate>10</update_rate>
                 <lidar>
                     <scan>
@@ -456,7 +456,7 @@
                 </material>
             </visual>
             <sensor name='gpu_lidar' type='gpu_lidar'>
-                <topic>lidar/45drl</topic>
+                <topic>lidar/l45drl</topic>
                 <update_rate>10</update_rate>
                 <lidar>
                     <scan>
@@ -666,7 +666,7 @@
                 </material>
             </visual>
             <sensor name='gpu_lidar' type='gpu_lidar'>
-                <topic>lidar/45ufr</topic>
+                <topic>lidar/l45ufr</topic>
                 <update_rate>10</update_rate>
                 <lidar>
                     <scan>
@@ -806,7 +806,7 @@
                 </material>
             </visual>
             <sensor name='gpu_lidar' type='gpu_lidar'>
-                <topic>lidar/45ufl</topic>
+                <topic>lidar/l45ufl</topic>
                 <update_rate>10</update_rate>
                 <lidar>
                     <scan>
@@ -876,7 +876,7 @@
                 </material>
             </visual>
             <sensor name='gpu_lidar' type='gpu_lidar'>
-                <topic>lidar/45url</topic>
+                <topic>lidar/l45url</topic>
                 <update_rate>10</update_rate>
                 <lidar>
                     <scan>
@@ -946,7 +946,7 @@
                 </material>
             </visual>
             <sensor name='gpu_lidar' type='gpu_lidar'>
-                <topic>lidar/45urr</topic>
+                <topic>lidar/l45urr</topic>
                 <update_rate>10</update_rate>
                 <lidar>
                     <scan>
@@ -1086,7 +1086,7 @@
                 </material>
             </visual>
             <sensor name='gpu_lidar' type='gpu_lidar'>
-                <topic>lidar/45dfrl</topic>
+                <topic>lidar/l45dfrl</topic>
                 <update_rate>10</update_rate>
                 <lidar>
                     <scan>
@@ -1156,7 +1156,7 @@
                 </material>
             </visual>
             <sensor name='gpu_lidar' type='gpu_lidar'>
-                <topic>lidar/45dfrll</topic>
+                <topic>lidar/l45dfrll</topic>
                 <update_rate>10</update_rate>
                 <lidar>
                     <scan>
