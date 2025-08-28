@@ -52,7 +52,8 @@ echo "Running colcon build..."
 colcon build \
   --symlink-install \
   --cmake-args -DCMAKE_BUILD_TYPE=Release \
-  --continue-on-error
+  --continue-on-error \
+  --executor sequential
 
 # 5. Source the local workspace setup file
 echo "Sourcing the local workspace environment..."
