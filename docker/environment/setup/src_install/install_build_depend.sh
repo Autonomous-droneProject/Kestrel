@@ -75,14 +75,14 @@ pip install \
 # 5. Initialize and update rosdep
 echo "Initializing and updating rosdep database..."
 if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then
-    sudo rosdep init
+    rosdep init
 fi
 rosdep update
 
 # 6. Install ROS 2 dependencies
 echo "Installing all ROS 2 dependencies from packages in 'src'..."
 # The rosdep command will still work from the workspace directory
-sudo rosdep install --rosdistro $ROS_DISTRO --from-paths src --ignore-src -r -y
+rosdep install --rosdistro $ROS_DISTRO --from-paths src --ignore-src -r -y
 deactivate
 
 echo "--------------------------------------------------------"
