@@ -3,6 +3,9 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
 
+# ok so this file is pretty good for testing gcs communication in isolation
+# it just launches the base station node
+
 def generate_launch_description():
 
     base_station_node = Node(
