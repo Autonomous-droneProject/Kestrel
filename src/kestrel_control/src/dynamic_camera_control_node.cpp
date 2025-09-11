@@ -10,7 +10,7 @@ later when we have to move the drone around
 namespace kestrel_control {
 DynamicCameraControlNode::DynamicCameraControlNode(
     const rclcpp::NodeOptions &options)
-    : rclcpp::Node("camera_control", options) {
+    : rclcpp::Node("dynamic_camera_control_node", options) {
   sub_position = this->create_subscription<geometry_msgs::msg::PoseStamped>(
       "odom", 5,
       std::bind(&DynamicCameraControlNode::update_position_callback, this,
@@ -34,6 +34,11 @@ DynamicCameraControlNode::DynamicCameraControlNode(
   this->declare_parameter<double>("camera_control_pid.tilt.i", 0.1);
   this->declare_parameter<double>("camera_control_pid.tilt.d", 0.08);
 
+  // Add missing parameters with default values
+  this->declare_parameter<double>("camera_control_pid.i_min", -1.0);
+  this->declare_parameter<double>("camera_control_pid.i_max", 1.0);
+  this->declare_parameter<bool>("camera_control_pid.antiwindup", true);
+
   pan_p_ = this->get_parameter("camera_control_pid.pan.p").as_double();
   pan_i_ = this->get_parameter("camera_control_pid.pan.i").as_double();
   pan_d_ = this->get_parameter("camera_control_pid.pan.d").as_double();
@@ -44,12 +49,15 @@ DynamicCameraControlNode::DynamicCameraControlNode(
 
   i_min_ = this->get_parameter("camera_control_pid.i_min").as_double();
   i_max_ = this->get_parameter("camera_control_pid.i_max").as_double();
-  aw_ = this->get_parameter("camera_control_pid.windup").as_bool();
+  aw_ = this->get_parameter("camera_control_pid.antiwindup").as_bool();
 
-  x_pid_controller = control_toolbox::Pid(pan_p_, pan_i_, pan_d_, i_min_, i_max_, control_toolbox::AntiWindupStrategy::BACK_CALCULATION);
-  y_pid_controller = control_toolbox::Pid(tilt_p_, tilt_i_, tilt_d_, i_min_, i_max_, control_toolbox::AntiWindupStrategy::BACK_CALCULATION);
+  x_pid_controller = control_toolbox::Pid(pan_p_, pan_i_, pan_d_, i_max_, i_min_, aw_);
+  y_pid_controller = control_toolbox::Pid(tilt_p_, tilt_i_, tilt_d_, i_max_, i_min_, aw_);
 
   prev_time = this->now(); // time when first called
+
+  RCLCPP_INFO(this->get_logger(), "DynamicCameraControlNode initialized with PID gains - Pan: P=%.2f I=%.2f D=%.2f, Tilt: P=%.2f I=%.2f D=%.2f", 
+              pan_p_, pan_i_, pan_d_, tilt_p_, tilt_i_, tilt_d_);
 }
 
 void DynamicCameraControlNode::update_position_callback(
