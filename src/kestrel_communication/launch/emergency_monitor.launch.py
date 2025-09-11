@@ -11,15 +11,15 @@ def generate_launch_description():
 
     emergency_handler_node = Node(
         package='kestrel_communication',
-        executable='emergency_handler',
-        name='emergency_handler',
+        executable='emergency_handler_node', # fixed: was 'emergency_handler'
+        name='emergency_handler_node',
         parameters=[os.path.join(kestrel_communication_share, 'config', 'emergency_triggers.yaml')]
     )
 
     heartbeat_monitor_node = Node(
         package='kestrel_communication',
-        executable='heartbeat_monitor',
-        name='heartbeat_monitor',
+        executable='heartbeat_monitor_node', # fixed: was 'heartbeat_monitor'
+        name='heartbeat_monitor_node',
         parameters=[os.path.join(kestrel_communication_share, 'config', 'comms_params.yaml')]
     )
 
