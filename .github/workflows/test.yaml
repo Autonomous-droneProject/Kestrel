@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - pathing_and_workflows
+      - linuxarm64
 
 jobs:
   docker-build-and-push:
