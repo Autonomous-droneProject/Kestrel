@@ -22,3 +22,6 @@
 [submodule "src/libraries/geographiclib"]
 	path = src/libraries/geographiclib
 	url = https://github.com/geographiclib/geographiclib.git
+[submodule "docker/l4t-ros2-docker"]
+	path = docker/l4t-ros2-docker
+	url = https://github.com/atinfinity/l4t-ros2-docker.git
