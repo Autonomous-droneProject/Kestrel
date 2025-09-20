@@ -3,6 +3,10 @@
 
 #include <std_msgs/msg/string.hpp>
 #include <std_msgs/msg/empty.hpp>
+
+#include "kestrel_msgs/msg/obstacle_grid.hpp"
+#include "mavros_msgs/msg/position_target.hpp"
+
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -21,7 +25,8 @@ DStarNode::DStarNode()
   got_costmap_(false),
   got_start_(false),
   got_goal_(false),
-  has_valid_path_(false)
+  has_valid_path_(false),
+  planning_mode_(PlanningMode::NEW_PATH)
 {
     this->declare_parameter<int>("x_range", 100);
     this->declare_parameter<int>("y_range", 100);
@@ -35,23 +40,25 @@ DStarNode::DStarNode()
 
     planner_ = std::make_unique<DSTARLITE>(x, y, z);
     
-    
     RCLCPP_INFO(this->get_logger(), "Successfully made node!");
 
-    costmap_sub_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
-        "/map", 10, std::bind(&DStarNode::mapCallback, this, _1));
+    costmap_sub_ = this->create_subscription<kestrel_msgs::msg::ObstacleGrid>(
+        "perception/obstacle_grid", 10, std::bind(&DStarNode::mapCallback, this, _1));
+
+    rclcpp::QoS qos(rclcpp::KeepLast(10));
+    qos.reliable();
 
     start_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
-        "/current_pose", 10, std::bind(&DStarNode::odomCallback, this, _1));
+        "odometry/local_pose", qos, std::bind(&DStarNode::odomCallback, this, _1));
 
-    goal_sub_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
-        "/goal_pose", 10, std::bind(&DStarNode::goalCallback, this, _1));
+    goal_sub_ = this->create_subscription<mavros_msgs::msg::PositionTarget>(
+        "mavros/setpoint_raw/local", 10, std::bind(&DStarNode::goalCallback, this, _1));
 
     replan_sub_ = this->create_subscription<std_msgs::msg::Empty>(
-        "/replan", 10, std::bind(&DStarNode::replanCallback, this, _1));
+        "planning/replan", 10, std::bind(&DStarNode::replanCallback, this, _1));
 
-    path_pub_ = this->create_publisher<nav_msgs::msg::Path>("/planned_path", 10);
-    status_pub_ = this->create_publisher<std_msgs::msg::String>("/planner_status", 10);
+    path_pub_ = this->create_publisher<nav_msgs::msg::Path>("planning/path", 10);
+    status_pub_ = this->create_publisher<std_msgs::msg::String>("planning/planner_status", 10);
 
     planning_thread_ = std::thread(&DStarNode::planningWorker, this);
 }
@@ -69,44 +76,48 @@ DStarNode::~DStarNode()
     }
 }
 
-
-void DStarNode::mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg)
+void DStarNode::mapCallback(const kestrel_msgs::msg::ObstacleGrid::SharedPtr msg)
 {
     std::lock_guard<std::mutex> lk(planner_mutex_);
     got_costmap_ = true;
     
-
-    int width = msg->info.width;
-    int height = msg->info.height;
+    uint32_t width = msg->width;
+    uint32_t height = msg->height;
+    uint32_t depth = msg->depth;
     
-
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            int idx = y * width + x;
-            if (msg->data[idx] > 50) {
+    for (uint32_t z = 0; z < depth; ++z) {
+        for (uint32_t y = 0; y < height; ++y) {
+            for (uint32_t x = 0; x < width; ++x) {
+                size_t idx = z * (width * height) + y * width + x;
                 
-                planner_->setOccupied(x, y, 0);
+                if (idx < msg->data.size() && msg->data[idx] > 50) {
+                    planner_->setOccupied(x, y, z);
+                }
             }
         }
     }
 
-    RCLCPP_INFO(this->get_logger(), "Map received: %u x %u (res: %.3f)",
-                width, height, msg->info.resolution);
+    RCLCPP_INFO(this->get_logger(), "3D Map received: %u x %u x %u (res: %.3f)",
+                width, height, depth, msg->resolution);
 
     if (has_valid_path_) {
         RCLCPP_INFO(this->get_logger(), "Map changed, triggering replan");
         has_valid_path_ = false;
     }
+    //triggerPlanningLocked_();
 }
 
-void DStarNode::goalCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
+void DStarNode::goalCallback(const mavros_msgs::msg::PositionTarget::SharedPtr msg)
 {
     std::lock_guard<std::mutex> lk(planner_mutex_);
-    planner_->setGoal(msg->pose.position.x, msg->pose.position.y, msg->pose.position.z);
+    
+    planner_->setGoal(msg->position.x, msg->position.y, msg->position.z);
     got_goal_ = true;
     has_valid_path_ = false;
+    
     RCLCPP_INFO(this->get_logger(), "Goal set: %.3f, %.3f, %.3f",
-                msg->pose.position.x, msg->pose.position.y, msg->pose.position.z);
+                msg->position.x, msg->position.y, msg->position.z);
+    //triggerPlanningLocked_();
 }
 
 void DStarNode::odomCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
@@ -116,7 +127,7 @@ void DStarNode::odomCallback(const geometry_msgs::msg::PoseStamped::SharedPtr ms
     got_start_ = true;
     RCLCPP_INFO(this->get_logger(), "Start set: %.3f, %.3f, %.3f",
                 msg->pose.position.x, msg->pose.position.y, msg->pose.position.z);
-    
+    //triggerPlanningLocked_();
 }
 
 void DStarNode::replanCallback(const std_msgs::msg::Empty::SharedPtr msg)
@@ -170,7 +181,6 @@ void DStarNode::triggerPlanningLocked_()
         else updatePlannerState(PlannerState::FAILURE);
     }
 }
-
 
 void DStarNode::planningWorker()
 {
@@ -232,7 +242,6 @@ void DStarNode::planningWorker()
         }
 
         planning_request_ = false;
-    
         planning_mode_ = PlanningMode::NEW_PATH;
         lk.unlock();
         std::this_thread::sleep_for(std::chrono::milliseconds(10));

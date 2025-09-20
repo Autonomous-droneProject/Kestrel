@@ -4,6 +4,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "nav_msgs/msg/path.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
+#include "mavros_msgs/msg/position_target.hpp"
 
 #include "utils.hpp"
 #include "Voxel.hpp"

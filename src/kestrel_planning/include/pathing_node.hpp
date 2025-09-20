@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "rclcpp/rclcpp.hpp"
-#include "nav_msgs/msg/occupancy_grid.hpp"
+#include "kestrel_msgs/msg/obstacle_grid.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "nav_msgs/msg/path.hpp"
 #include "std_msgs/msg/string.hpp"
@@ -48,18 +48,17 @@ private:
     PlanningMode planning_mode_;
 
     //void octomapCallback(const octomap_msgs::msg::Octomap::SharedPtr msg);
-    void mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
-    void goalCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
+    void mapCallback(const kestrel_msgs::msg::ObstacleGrid::SharedPtr msg);
+    void goalCallback(const mavros_msgs::msg::PositionTarget::SharedPtr msg);
     void odomCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
     void replanCallback(const std_msgs::msg::Empty::SharedPtr msg);
 
-    //rclcpp::Subscription<octomap_msgs::msg::Octomap>::SharedPtr octomap_sub_;
-    rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr costmap_sub_;
+    rclcpp::Subscription<kestrel_msgs::msg::ObstacleGrid>::SharedPtr costmap_sub_;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr start_sub_;
-    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr goal_sub_;
+    rclcpp::Subscription<mavros_msgs::msg::PositionTarget>::SharedPtr goal_sub_;
+    rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr replan_sub_;
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr status_pub_;
-    rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr replan_sub_;
 
     std::unique_ptr<DSTARLITE> planner_;
     std::mutex planner_mutex_;

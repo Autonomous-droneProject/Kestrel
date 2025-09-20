@@ -269,6 +269,7 @@ int DSTARLITE::extractPath(std::vector<geometry_msgs::msg::PoseStamped> &waypoin
     
     while (node && visited.find(node->getPoint()) == visited.end()) {
         vec3 point = node->getPoint();
+        std::cout << "[DEBUG] " << point.x << " " << point.y << " " << point.z << std::endl;
         visited.insert(point);
 
         if (!(point == start)) { 
