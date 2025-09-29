@@ -4,7 +4,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/nav_sat_fix.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
-#include "GeographicLib/LocalCartesian.hpp"
+#include <GeographicLib/LocalCartesian.hpp>
 #include <memory>
 
 namespace kestrel_control

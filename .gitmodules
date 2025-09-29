@@ -1,9 +1,3 @@
-[submodule "src/libraries/mavlink"]
-	path = src/libraries/mavlink
-	url = https://github.com/mavlink/mavlink
-[submodule "src/libraries/mavros"]
-	path = src/libraries/mavros
-	url = https://github.com/mavlink/mavros
 [submodule "src/driver/vl53l1x"]
 	path = src/driver/vl53l1x
 	url = https://github.com/Autonomous-droneProject/ROS2-VL53L1X.git
@@ -19,9 +13,6 @@
 [submodule "docs/KestrelAssembly"]
 	path = docs/KestrelAssembly
 	url = https://github.com/Autonomous-droneProject/KestrelAssembly.git
-[submodule "src/libraries/geographiclib"]
-	path = src/libraries/geographiclib
-	url = https://github.com/geographiclib/geographiclib.git
 [submodule "docker/l4t-ros2-docker"]
 	path = docker/l4t-ros2-docker
 	url = https://github.com/atinfinity/l4t-ros2-docker.git
