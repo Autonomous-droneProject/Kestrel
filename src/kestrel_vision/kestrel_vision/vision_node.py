@@ -6,7 +6,7 @@ from pathlib import Path
 
 # ROS messages
 from sensor_msgs.msg import Image
-from kestrel_msgs.msg import EmbeddedDetection2D, EmbeddedDetection2DArray
+from kestrel_msgs.msg import Detection, DetectionArray
 
 # Computer vision and deep learning libraries
 import cv2
@@ -48,7 +48,7 @@ class VisionNode(Node):
         self.conf_threshold = self.declare_parameter('conf_threshold', 0.5).get_parameter_value().double_value
 
         # create publishers and subscription
-        self.pub_det = self.create_publisher(EmbeddedDetection2DArray, '/kestrel/detections', 10)
+        self.pub_det = self.create_publisher(DetectionArray, '/kestrel/detections', 10)
         self.pub_dbg = self.create_publisher(Image, '/kestrel/debug/frame', 10)
         self.image_subscriber = self.create_subscription(Image, '/camera/image_raw', self.image_callback, 10)
 
@@ -59,7 +59,7 @@ class VisionNode(Node):
         frame = self.bridge.imgmsg_to_cv2(msg, 'bgr8')
         yolo_results = self.yolo_model(frame, verbose=False)[0]
 
-        det_array_msg = EmbeddedDetection2DArray()
+        det_array_msg = DetectionArray()
         det_array_msg.header = msg.header
 
         for box in yolo_results.boxes:
@@ -77,7 +77,7 @@ class VisionNode(Node):
                     continue
 
                 # Populate the custom ROS message
-                detection_msg = EmbeddedDetection2D()
+                detection_msg = Detection()
                 detection_msg.header = msg.header
                 
                 # populate msg with info on detection 
