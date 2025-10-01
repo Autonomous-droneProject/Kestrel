@@ -1,0 +1,24 @@
+{
+  "name": "Kestrel l4t-ros2:jazzy",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "runArgs": [
+    "--net=host",
+    "--runtime=nvidia",
+    "-e",
+    "DISPLAY=${localEnv:DISPLAY}",
+    "-v",
+    "/tmp/.X11-unix/:/tmp/.X11-unix:rw",
+    "-v",
+    "${localEnv:HOME}:${localEnv:HOME}:rw"
+  ],
+  "containerEnv": {
+    "DISPLAY": "${localEnv:DISPLAY}"
+  },
+  "workspaceFolder": "${localEnv:HOME}/Kestrel",
+  "postCreateCommand": "bash -lc 'set -euo pipefail; if [ -f \"${containerWorkspaceFolder}/scripts/rosdep_install.sh\" ]; then echo \"Running scripts/rosdep_install.sh\"; bash \"${containerWorkspaceFolder}/scripts/rosdep_install.sh\"; else echo \"No scripts/rosdep_install.sh found; skipping rosdep install.\"; fi'",
+  "postStartCommand": "echo \"If GUI apps fail to open, run 'xhost +' on the host to allow X connections.\"",
+  "remoteUser": "jetson"
+}

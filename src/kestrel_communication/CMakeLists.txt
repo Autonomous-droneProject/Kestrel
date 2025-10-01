@@ -9,9 +9,8 @@ find_package(std_msgs REQUIRED)
 find_package(kestrel_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(rclpy REQUIRED)
-
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};/usr/share/cmake/mavros_msgs")
 find_package(mavros_msgs REQUIRED)
+
 # Include directory for headers
 include_directories(include)
 
