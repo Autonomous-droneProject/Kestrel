@@ -41,7 +41,8 @@ public:
 
     void replan(float x, float y, float z);
     int extractPath(std::vector<geometry_msgs::msg::PoseStamped> &waypoints);
-    void setOccupied(int x, int y, int z);
+    void setOccupiedStatus(int x, int y, int z, bool value);
+    void initializeCostmap(); 
 
 private:
     float km;                
@@ -70,6 +71,7 @@ private:
     void insertOpenList(std::shared_ptr<state> node);
     bool isInOpenList(std::shared_ptr<state> node);
     void removeFromOpenList(std::shared_ptr<state> node);
+   
     std::shared_ptr<state> topOpenList();
     bool openListEmpty();
 

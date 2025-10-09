@@ -26,7 +26,8 @@ DStarNode::DStarNode()
   got_start_(false),
   got_goal_(false),
   has_valid_path_(false),
-  planning_mode_(PlanningMode::NEW_PATH)
+  planning_mode_(PlanningMode::NEW_PATH),
+  costmap_initialized_(false)
 {
     this->declare_parameter<int>("x_range", 100);
     this->declare_parameter<int>("y_range", 100);
@@ -79,11 +80,20 @@ DStarNode::~DStarNode()
 void DStarNode::mapCallback(const kestrel_msgs::msg::ObstacleGrid::SharedPtr msg)
 {
     std::lock_guard<std::mutex> lk(planner_mutex_);
+    
+    // Initialize costmap structure on first map callback
+    if (!costmap_initialized_) {
+        RCLCPP_INFO(this->get_logger(), "First map received - initializing costmap structure");
+        planner_->initializeCostmap();
+        costmap_initialized_ = true;
+    }
+    
     got_costmap_ = true;
     
     uint32_t width = msg->width;
     uint32_t height = msg->height;
     uint32_t depth = msg->depth;
+    int n_obstacles = 0;
     
     for (uint32_t z = 0; z < depth; ++z) {
         for (uint32_t y = 0; y < height; ++y) {
@@ -91,20 +101,24 @@ void DStarNode::mapCallback(const kestrel_msgs::msg::ObstacleGrid::SharedPtr msg
                 size_t idx = z * (width * height) + y * width + x;
                 
                 if (idx < msg->data.size() && msg->data[idx] > 50) {
-                    planner_->setOccupied(x, y, z);
+                    planner_->setOccupiedStatus(x, y, z, true);
+                    n_obstacles++;
+                } else {
+                    planner_->setOccupiedStatus(x, y, z, false);
                 }
+
             }
         }
     }
 
-    RCLCPP_INFO(this->get_logger(), "3D Map received: %u x %u x %u (res: %.3f)",
-                width, height, depth, msg->resolution);
+    RCLCPP_INFO(this->get_logger(), "3D Map received: %u x %u x %u (res: %.3f) with %d obstacles",
+                width, height, depth, msg->resolution, n_obstacles);
 
     if (has_valid_path_) {
         RCLCPP_INFO(this->get_logger(), "Map changed, triggering replan");
         has_valid_path_ = false;
     }
-    //triggerPlanningLocked_();
+    triggerPlanningLocked_();
 }
 
 void DStarNode::goalCallback(const mavros_msgs::msg::PositionTarget::SharedPtr msg)
@@ -117,7 +131,7 @@ void DStarNode::goalCallback(const mavros_msgs::msg::PositionTarget::SharedPtr m
     
     RCLCPP_INFO(this->get_logger(), "Goal set: %.3f, %.3f, %.3f",
                 msg->position.x, msg->position.y, msg->position.z);
-    //triggerPlanningLocked_();
+    triggerPlanningLocked_();
 }
 
 void DStarNode::odomCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
@@ -125,15 +139,18 @@ void DStarNode::odomCallback(const geometry_msgs::msg::PoseStamped::SharedPtr ms
     std::lock_guard<std::mutex> lk(planner_mutex_);
     planner_->setStart(msg->pose.position.x, msg->pose.position.y, msg->pose.position.z);
     got_start_ = true;
-    RCLCPP_INFO(this->get_logger(), "Start set: %.3f, %.3f, %.3f",
-                msg->pose.position.x, msg->pose.position.y, msg->pose.position.z);
-    //triggerPlanningLocked_();
+    triggerPlanningLocked_();
 }
 
 void DStarNode::replanCallback(const std_msgs::msg::Empty::SharedPtr msg)
 {
     (void)msg;
     std::lock_guard<std::mutex> lk(planner_mutex_);
+    
+    if (!costmap_initialized_) {
+        RCLCPP_WARN(this->get_logger(), "Cannot plan - costmap not initialized yet");
+        return;
+    }
     
     if (has_valid_path_) {
         RCLCPP_INFO(this->get_logger(), "Replan requested - existing path will be updated");
@@ -143,14 +160,12 @@ void DStarNode::replanCallback(const std_msgs::msg::Empty::SharedPtr msg)
     }
     
     if (got_costmap_ && got_start_ && got_goal_) {
-        if (!has_valid_path_) {
-            planner_->initialize();
-        }
+        planner_->initialize();
         planning_request_ = true;
         planning_cv_.notify_one();
-        RCLCPP_INFO(this->get_logger(), "Replan triggered successfully");
+        RCLCPP_INFO(this->get_logger(), "Planning triggered successfully");
     } else {
-        RCLCPP_WARN(this->get_logger(), "Cannot replan - missing required data (costmap=%d, start=%d, goal=%d)",
+        RCLCPP_WARN(this->get_logger(), "Cannot plan - missing required data (costmap=%d, start=%d, goal=%d)",
                    got_costmap_, got_start_, got_goal_);
         
         if (!got_costmap_) updatePlannerState(PlannerState::NO_MAP);
@@ -167,10 +182,16 @@ void DStarNode::triggerPlanning()
 
 void DStarNode::triggerPlanningLocked_()
 {
-    RCLCPP_INFO(this->get_logger(), "Planning check: costmap=%d start=%d goal=%d",
-                got_costmap_, got_start_, got_goal_);
+    RCLCPP_INFO(this->get_logger(), "Planning check: costmap=%d start=%d goal=%d initialized=%d",
+                got_costmap_, got_start_, got_goal_, costmap_initialized_);
+
+    if (!costmap_initialized_) {
+        updatePlannerState(PlannerState::NO_MAP);
+        return;
+    }
 
     if (got_costmap_ && got_start_ && got_goal_) {
+        planner_->initialize();
         planning_request_ = true;
         RCLCPP_INFO(this->get_logger(), "Planning triggered");
         planning_cv_.notify_one();

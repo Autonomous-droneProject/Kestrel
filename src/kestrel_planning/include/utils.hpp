@@ -75,68 +75,77 @@ struct vec3 {
     }
 };
 
-
 class state {
-    public:
-        state() {};
-        state(int a, int b, int c) {
-            point = vec3(a,b,c);
-        }
+public:
+    state() 
+        : point(vec3(0, 0, 0))
+        , g(0.0f)
+        , rhs(0.0f)
+        , rhs_from(nullptr)
+        , key({0.0f, 0.0f})
+        , occupied(false) 
+    {}
+    
+    state(int a, int b, int c) 
+        : point(vec3(a, b, c))
+        , g(0.0f)
+        , rhs(0.0f)
+        , rhs_from(nullptr)
+        , key({0.0f, 0.0f})
+        , occupied(false) 
+    {}
 
-        void setG(float _g) {
-            g = _g;
-        }
-        void setRHS(float _rhs) {
-            rhs = _rhs;
-        }
-        float getG() {
-            return g;
-        }
-        float getRHS() {
-            return rhs;
-        }
-        void setPoint(vec3 pt) {
-            point = pt;
-        }
-        vec3 getPoint() const {
-            return point;
-        }
-        bool isConsistent() {
-            const float EPS = 1e-5f;
-            return std::abs(g - rhs) < EPS;
-        }
+    void setG(float _g) {
+        g = _g;
+    }
+    void setRHS(float _rhs) {
+        rhs = _rhs;
+    }
+    float getG() {
+        return g;
+    }
+    float getRHS() {
+        return rhs;
+    }
+    void setPoint(vec3 pt) {
+        point = pt;
+    }
+    vec3 getPoint() const {
+        return point;
+    }
+    bool isConsistent() {
+        const float EPS = 1e-5f;
+        return std::abs(g - rhs) < EPS;
+    }
 
-        bool isOverConsistent() {
-            return (g > rhs);
-        }
-        std::shared_ptr<state> nextStep() {
-            return rhs_from;
-        }
-        void setNextStep(std::shared_ptr<state> u) {
-            rhs_from = u;
-        }
-        void setkey(std::pair<float,float> k ) {
-            key = k;
-        }
-        std::pair<float,float> getKey() {
-            return key;
-        }
-        void setOccupation(bool val) {
-            occupied = val;
-        }
-        bool getOccupy() {
-            return occupied;
-        }
-        
+    bool isOverConsistent() {
+        return (g > rhs);
+    }
+    std::shared_ptr<state> nextStep() {
+        return rhs_from;
+    }
+    void setNextStep(std::shared_ptr<state> u) {
+        rhs_from = u;
+    }
+    void setkey(std::pair<float,float> k) {
+        key = k;
+    }
+    std::pair<float,float> getKey() {
+        return key;
+    }
+    void setOccupation(bool val) {
+        occupied = val;
+    }
+    bool getOccupy() {
+        return occupied;
+    }
 
-
-    private:
-        vec3 point;
-        float g, rhs;
-        std::shared_ptr<state> rhs_from;
-        std::pair<float,float> key;
-        bool occupied;
-        
+private:
+    vec3 point;
+    float g, rhs;
+    std::shared_ptr<state> rhs_from;
+    std::pair<float,float> key;
+    bool occupied;
 };
 
 

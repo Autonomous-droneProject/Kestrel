@@ -1,15 +1,10 @@
-
 #include "dstar_planner.hpp"
 
-void DSTARLITE::initialize() {
-    std::cout << "[PATHING START] dstarlite initializing" << std::endl;
+void DSTARLITE::initializeCostmap() {
+    // Only call this ONCE at the very beginning
+    std::cout << "[COSTMAP] Initializing costmap structure" << std::endl;
     costmap.clear();
-    km = 0.0f;
-    while (!open_list.empty()) {
-        open_list.pop();
-    }
-    open_set.clear();
-
+    
     for (uint32_t x = 0; x < X_RANGE; ++x) {
         for (uint32_t y = 0; y < Y_RANGE; ++y) {
             for (uint32_t z = 0; z < Z_RANGE; ++z) {
@@ -19,6 +14,32 @@ void DSTARLITE::initialize() {
                 cell_state->setRHS(INF_FLOAT);
                 cell_state->setNextStep(nullptr);
                 costmap.insert(cell_state, cell_state->getPoint());
+            }
+        }
+    }
+}
+
+void DSTARLITE::initialize() {
+    std::cout << "[PATHING START] dstarlite initializing" << std::endl;
+    
+    // Reset planner state but DON'T clear costmap (preserves obstacles)
+    km = 0.0f;
+    while (!open_list.empty()) {
+        open_list.pop();
+    }
+    open_set.clear();
+
+    // Reset all cells' G, RHS values but preserve occupation state
+    for (uint32_t x = 0; x < X_RANGE; ++x) {
+        for (uint32_t y = 0; y < Y_RANGE; ++y) {
+            for (uint32_t z = 0; z < Z_RANGE; ++z) {
+                auto cell = costmap(x, y, z);
+                if (cell) {
+                    // Reset planning values but keep occupation state
+                    cell->setG(INF_FLOAT);
+                    cell->setRHS(INF_FLOAT);
+                    cell->setNextStep(nullptr);
+                }
             }
         }
     }
@@ -58,28 +79,19 @@ void DSTARLITE::insertOpenList(std::shared_ptr<state> node) {
 
     open_list.push(std::make_pair(key, node));
     open_set.insert(node);
-
-    std::cout << "[DEBUG] Inserted ("<<node->getPoint().x<<","<<node->getPoint().y<<","<<node->getPoint().z
-              <<") key=("<<key.first<<","<<key.second<<")\n";
 }
-
 
 bool DSTARLITE::isInOpenList(std::shared_ptr<state> node) {
     return open_set.find(node) != open_set.end();
 }
 
-
-
 std::pair<float,float> DSTARLITE::calculateKey(std::shared_ptr<state> u) {
     float val = std::min(u->getG(), u->getRHS());
-
     return { val + heuristic(start_state, u) + km, val };
 }
 
-
 std::vector<std::shared_ptr<state>> DSTARLITE::getSuccessors(std::shared_ptr<state> node) {
     std::vector<std::shared_ptr<state>> succs;
-
     vec3 pos = node->getPoint();
 
     for (int dx = -1; dx <= 1; ++dx) {
@@ -95,24 +107,17 @@ std::vector<std::shared_ptr<state>> DSTARLITE::getSuccessors(std::shared_ptr<sta
                 }
 
                 auto neighbor = costmap(neighbor_pos.x, neighbor_pos.y, neighbor_pos.z);
-
                 if (neighbor && !isOccupied(neighbor_pos.x, neighbor_pos.y, neighbor_pos.z)) {
                     succs.push_back(neighbor);
-                } else {
-                    if (isOccupied(neighbor_pos.x, neighbor_pos.y, neighbor_pos.z)) {
-                        std::cout << neighbor_pos.x << " " << neighbor_pos.y << " " << neighbor_pos.z << " is occupied! \n";
-                    }
                 }
             }
         }
     }
-
     return succs;
 }
 
 std::vector<std::shared_ptr<state>> DSTARLITE::getPredecessors(std::shared_ptr<state> node) {
     std::vector<std::shared_ptr<state>> preds;
-
     vec3 pos = node->getPoint();
 
     for (int dx = -1; dx <= 1; ++dx) {
@@ -130,17 +135,14 @@ std::vector<std::shared_ptr<state>> DSTARLITE::getPredecessors(std::shared_ptr<s
                     continue;
 
                 auto neighbor = costmap(nx, ny, nz);
-
                 if (neighbor && heuristic(neighbor, node) < INF_FLOAT) {
                     preds.push_back(neighbor);
                 }
             }
         }
     }
-
     return preds;
 }
-
 
 bool DSTARLITE::openListEmpty() {
     while (!open_list.empty() &&
@@ -150,10 +152,8 @@ bool DSTARLITE::openListEmpty() {
     return open_list.empty();
 }
 
-
 void DSTARLITE::removeFromOpenList(std::shared_ptr<state> node) {
     open_set.erase(node);
-    
 }
 
 int DSTARLITE::computeShortestPath() {
@@ -191,9 +191,6 @@ int DSTARLITE::computeShortestPath() {
     return count;
 }
 
-
-
-
 void DSTARLITE::updateVertex(std::shared_ptr<state> u) {
     if (u->getPoint() != goal) {
         float min_rhs = INF_FLOAT;
@@ -209,7 +206,6 @@ void DSTARLITE::updateVertex(std::shared_ptr<state> u) {
     }
 
     if (isInOpenList(u)) removeFromOpenList(u);
-
     if (!u->isConsistent()) insertOpenList(u);
 }
 
@@ -236,7 +232,10 @@ std::shared_ptr<state> DSTARLITE::topOpenList() {
     while (!open_list.empty()) {
         auto [oldKey, node] = open_list.top();
 
-        if (open_set.find(node) == open_set.end()) { open_list.pop(); continue; }
+        if (open_set.find(node) == open_set.end()) { 
+            open_list.pop(); 
+            continue; 
+        }
 
         auto newKey = calculateKey(node);
         if (std::tie(oldKey.first, oldKey.second) <
@@ -302,20 +301,20 @@ int DSTARLITE::extractPath(std::vector<geometry_msgs::msg::PoseStamped> &waypoin
 }
 
 bool DSTARLITE::isOccupied(int x, int y, int z) {
-    std::shared_ptr<state>&s = costmap(x, y, z);
+    std::shared_ptr<state>& s = costmap(x, y, z);
     if (!s) {
         return false;
     }
     return s->getOccupy();
 }
 
-void DSTARLITE::setOccupied(int x, int y, int z) {
+void DSTARLITE::setOccupiedStatus(int x, int y, int z, bool value) {
     auto state_occupied = costmap(x, y, z);
     if (!state_occupied) {
         std::cerr << "Error: No state found at (" << x << ", " << y << ", " << z << ")\n";
         return;
     }
-    state_occupied->setOccupation(true);
+    state_occupied->setOccupation(value);
     state_occupied->setG(INF_FLOAT);
     state_occupied->setRHS(INF_FLOAT);
     state_occupied->setNextStep(nullptr);
@@ -338,7 +337,7 @@ void DSTARLITE::replan(float x, float y, float z) {
     vec3 obstacle_pos(px, py, pz);
     km += heuristic(start_state, costmap(px, py, pz));
     
-    setOccupied(px, py, pz);
+    setOccupiedStatus(px, py, pz, true);
     auto node = costmap(px, py, pz);
     
     updateVertex(node);

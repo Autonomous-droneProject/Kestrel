@@ -146,17 +146,9 @@ class TestKestrelPlanning(unittest.TestCase):
         
         if obstacles:
             for obstacle in obstacles:
-                if len(obstacle) == 2:
-                    ox, oy = obstacle
-                    for oz in range(depth // 4, 3 * depth // 4): 
-                        if 0 <= ox < width and 0 <= oy < height and 0 <= oz < depth:
-                            idx = ox + oy * width + oz * width * height
-                            grid_msg.data[idx] = 100  
-                elif len(obstacle) == 3:
-                    ox, oy, oz = obstacle
-                    if 0 <= ox < width and 0 <= oy < height and 0 <= oz < depth:
-                        idx = ox + oy * width + oz * width * height
-                        grid_msg.data[idx] = 100  
+                ox, oy, oz = obstacle  
+                idx = oz * (width * height) + oy * width + ox
+                grid_msg.data[idx] = 100  
         
         return grid_msg
 
@@ -224,8 +216,8 @@ class TestKestrelPlanning(unittest.TestCase):
         
         self.wait_for_subscribers()
         self.node.reset_tracking()
-
-        obstacle_grid = self.create_obstacle_grid(width=50, height=50, depth=30)
+        obstacles = [(10,10, 0), (10,13, 5), (5,5, 0), (24,24,4), (10,10,1), (19,19,2)]
+        obstacle_grid = self.create_obstacle_grid(width=50, height=50, depth=30, obstacles=obstacles)
         self.node.obstacle_grid_pub.publish(obstacle_grid)
         print("sent obstacle grid")
         time.sleep(0.5)
@@ -245,13 +237,14 @@ class TestKestrelPlanning(unittest.TestCase):
         print("triggered replan")
         time.sleep(0.5)
         
-
         path_received = self.wait_for_path(timeout=500)
+        
         self.assertTrue(path_received, "No path received from planner")
         self.assertIsNotNone(self.node.received_path, "Path is None")
         self.assertGreater(len(self.node.received_path.poses), 0, "Path is empty")
 
         print(f"Basic planning successful: {len(self.node.received_path.poses)} waypoints")
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

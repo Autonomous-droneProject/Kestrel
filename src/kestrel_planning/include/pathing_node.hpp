@@ -44,6 +44,7 @@ private:
     bool got_start_;
     bool got_goal_;
     bool has_valid_path_;
+    bool costmap_initialized_;
 
     PlanningMode planning_mode_;
 
