@@ -61,6 +61,7 @@ private:
                        StateComparator> open_list;
     
     std::unordered_set<std::shared_ptr<state>> open_set;
+    std::vector<std::shared_ptr<state>> visited;
 
     bool isOccupied(int x, int y, int z);
     std::vector<std::shared_ptr<state>> getPredecessors(std::shared_ptr<state> node);

@@ -4,6 +4,8 @@ void DSTARLITE::initializeCostmap() {
     // Only call this ONCE at the very beginning
     std::cout << "[COSTMAP] Initializing costmap structure" << std::endl;
     costmap.clear();
+    km = 0.0f;
+    visited.clear();  // Clear visited tracking
     
     for (uint32_t x = 0; x < X_RANGE; ++x) {
         for (uint32_t y = 0; y < Y_RANGE; ++y) {
@@ -22,27 +24,20 @@ void DSTARLITE::initializeCostmap() {
 void DSTARLITE::initialize() {
     std::cout << "[PATHING START] dstarlite initializing" << std::endl;
     
-    // Reset planner state but DON'T clear costmap (preserves obstacles)
     km = 0.0f;
     while (!open_list.empty()) {
         open_list.pop();
     }
     open_set.clear();
 
-    // Reset all cells' G, RHS values but preserve occupation state
-    for (uint32_t x = 0; x < X_RANGE; ++x) {
-        for (uint32_t y = 0; y < Y_RANGE; ++y) {
-            for (uint32_t z = 0; z < Z_RANGE; ++z) {
-                auto cell = costmap(x, y, z);
-                if (cell) {
-                    // Reset planning values but keep occupation state
-                    cell->setG(INF_FLOAT);
-                    cell->setRHS(INF_FLOAT);
-                    cell->setNextStep(nullptr);
-                }
-            }
+    for (auto& node : visited) {
+        if (node) {
+            node->setG(INF_FLOAT);
+            node->setRHS(INF_FLOAT);
+            node->setNextStep(nullptr);
         }
     }
+    visited.clear();
     
     goal_state = costmap(goal.x, goal.y, goal.z);
     start_state = costmap(start.x, start.y, start.z);
@@ -55,11 +50,14 @@ void DSTARLITE::initialize() {
     goal_state->setG(INF_FLOAT);
     goal_state->setRHS(0.0f);
     goal_state->setNextStep(nullptr);
-    goal_state->setkey(calculateKey(goal_state));
+    goal_state->setKey(calculateKey(goal_state));
+    visited.push_back(goal_state); 
     
     start_state->setG(INF_FLOAT);
     start_state->setRHS(INF_FLOAT);
     start_state->setNextStep(nullptr);
+    visited.push_back(start_state); 
+    
     insertOpenList(goal_state);
 }
 
@@ -176,9 +174,11 @@ int DSTARLITE::computeShortestPath() {
 
         if (u->getG() > u->getRHS()) {
             u->setG(u->getRHS());
+            visited.push_back(u); 
             for (auto s : getSuccessors(u)) updateVertex(s);
         } else {
             u->setG(INF_FLOAT);
+            visited.push_back(u);  
             updateVertex(u);
             for (auto s : getSuccessors(u)) updateVertex(s);
         }
@@ -203,6 +203,7 @@ void DSTARLITE::updateVertex(std::shared_ptr<state> u) {
         }
         u->setRHS(min_rhs);
         u->setNextStep(best);
+        visited.push_back(u);  
     }
 
     if (isInOpenList(u)) removeFromOpenList(u);
@@ -232,10 +233,7 @@ std::shared_ptr<state> DSTARLITE::topOpenList() {
     while (!open_list.empty()) {
         auto [oldKey, node] = open_list.top();
 
-        if (open_set.find(node) == open_set.end()) { 
-            open_list.pop(); 
-            continue; 
-        }
+        if (open_set.find(node) == open_set.end()) { open_list.pop(); continue; }
 
         auto newKey = calculateKey(node);
         if (std::tie(oldKey.first, oldKey.second) <
@@ -264,12 +262,12 @@ int DSTARLITE::extractPath(std::vector<geometry_msgs::msg::PoseStamped> &waypoin
     }
 
     uint32_t count = 0;
-    std::set<vec3> visited;
+    std::set<vec3> visited_path;
     
-    while (node && visited.find(node->getPoint()) == visited.end()) {
+    while (node && visited_path.find(node->getPoint()) == visited_path.end()) {
         vec3 point = node->getPoint();
         std::cout << "[DEBUG] " << point.x << " " << point.y << " " << point.z << std::endl;
-        visited.insert(point);
+        visited_path.insert(point);
 
         if (!(point == start)) { 
             geometry_msgs::msg::PoseStamped pose;
@@ -293,7 +291,7 @@ int DSTARLITE::extractPath(std::vector<geometry_msgs::msg::PoseStamped> &waypoin
         node = node->nextStep();
     }
 
-    if (visited.find(goal) == visited.end()) {
+    if (visited_path.find(goal) == visited_path.end()) {
         std::cerr << "Path broken before reaching goal.\n";
     }
 
@@ -318,6 +316,7 @@ void DSTARLITE::setOccupiedStatus(int x, int y, int z, bool value) {
     state_occupied->setG(INF_FLOAT);
     state_occupied->setRHS(INF_FLOAT);
     state_occupied->setNextStep(nullptr);
+    visited.push_back(state_occupied); 
 }
 
 void DSTARLITE::replan(float x, float y, float z) {

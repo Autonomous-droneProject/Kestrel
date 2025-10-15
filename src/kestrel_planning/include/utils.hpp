@@ -1,5 +1,6 @@
 #ifndef UTILS_H
 #define UTILS_H
+#pragma once
 
 #include <iostream>
 #define TOL 1e6
@@ -127,7 +128,7 @@ public:
     void setNextStep(std::shared_ptr<state> u) {
         rhs_from = u;
     }
-    void setkey(std::pair<float,float> k) {
+    void setKey(std::pair<float,float> k) {
         key = k;
     }
     std::pair<float,float> getKey() {
