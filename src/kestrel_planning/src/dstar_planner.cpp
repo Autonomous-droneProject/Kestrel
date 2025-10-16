@@ -1,5 +1,7 @@
 
 #include "dstar_planner.hpp"
+#include <cmath>
+#include <algorithm>
 
 void DSTARLITE::initialize() {
     std::cout << "[PATHING START] dstarlite initializing" << std::endl;
@@ -79,63 +81,91 @@ std::pair<float,float> DSTARLITE::calculateKey(std::shared_ptr<state> u) {
 
 std::vector<std::shared_ptr<state>> DSTARLITE::getSuccessors(std::shared_ptr<state> node) {
     std::vector<std::shared_ptr<state>> succs;
+    succs.reserve(26);  // 3D neighborhood size
 
-    vec3 pos = node->getPoint();
+    const vec3 p = node->getPoint();
 
-    for (int dx = -1; dx <= 1; ++dx) {
-        for (int dy = -1; dy <= 1; ++dy) {
-            for (int dz = -1; dz <= 1; ++dz) {
-                if (dx == 0 && dy == 0 && dz == 0) continue;
+    // 26 fixed offsets for 3D adjacency (no {0,0,0})
+    static constexpr int OFF[26][3] = {
+        {-1,-1,-1},{ 0,-1,-1},{ 1,-1,-1},
+        {-1, 0,-1},{ 0, 0,-1},{ 1, 0,-1},
+        {-1, 1,-1},{ 0, 1,-1},{ 1, 1,-1},
+        {-1,-1, 0},{ 0,-1, 0},{ 1,-1, 0},
+        {-1, 0, 0},              { 1, 0, 0},
+        {-1, 1, 0},{ 0, 1, 0},{ 1, 1, 0},
+        {-1,-1, 1},{ 0,-1, 1},{ 1,-1, 1},
+        {-1, 0, 1},{ 0, 0, 1},{ 1, 0, 1},
+        {-1, 1, 1},{ 0, 1, 1},{ 1, 1, 1}
+    };
 
-                vec3 neighbor_pos(pos.x + dx, pos.y + dy, pos.z + dz);
-                if (neighbor_pos.x < 0 || neighbor_pos.x >= static_cast<int>(X_RANGE) ||
-                    neighbor_pos.y < 0 || neighbor_pos.y >= static_cast<int>(Y_RANGE) ||
-                    neighbor_pos.z < 0 || neighbor_pos.z >= static_cast<int>(Z_RANGE)) {
-                    continue;
-                }
+    const int W = static_cast<int>(X_RANGE);
+    const int H = static_cast<int>(Y_RANGE);
+    const int D = static_cast<int>(Z_RANGE);
 
-                auto neighbor = costmap(neighbor_pos.x, neighbor_pos.y, neighbor_pos.z);
+    for (int i = 0; i < 26; ++i) {
+        const int nx = p.x + OFF[i][0];
+        const int ny = p.y + OFF[i][1];
+        const int nz = p.z + OFF[i][2];
 
-                if (neighbor && !isOccupied(neighbor_pos.x, neighbor_pos.y, neighbor_pos.z)) {
-                    succs.push_back(neighbor);
-                } else {
-                    if (isOccupied(neighbor_pos.x, neighbor_pos.y, neighbor_pos.z)) {
-                        std::cout << neighbor_pos.x << " " << neighbor_pos.y << " " << neighbor_pos.z << " is occupied! \n";
-                    }
-                }
-            }
+        if ((unsigned)nx >= (unsigned)W ||
+            (unsigned)ny >= (unsigned)H ||
+            (unsigned)nz >= (unsigned)D) {
+            continue;
+        }
+
+        // one costmap lookup only
+        auto neighbor = costmap(nx, ny, nz);
+        if (!neighbor) continue;
+
+        // single occupancy check, no repeated call
+        if (!neighbor->getOccupy()) {
+            succs.push_back(neighbor);
         }
     }
 
     return succs;
 }
 
+
+
 std::vector<std::shared_ptr<state>> DSTARLITE::getPredecessors(std::shared_ptr<state> node) {
     std::vector<std::shared_ptr<state>> preds;
+    preds.reserve(26);
 
-    vec3 pos = node->getPoint();
+    const vec3 p = node->getPoint();
+    const int W = static_cast<int>(X_RANGE);
+    const int H = static_cast<int>(Y_RANGE);
+    const int D = static_cast<int>(Z_RANGE);
 
-    for (int dx = -1; dx <= 1; ++dx) {
-        for (int dy = -1; dy <= 1; ++dy) {
-            for (int dz = -1; dz <= 1; ++dz) {
-                if (dx == 0 && dy == 0 && dz == 0) continue;
+    static constexpr int OFF[26][3] = {
+        {-1,-1,-1},{ 0,-1,-1},{ 1,-1,-1},
+        {-1, 0,-1},{ 0, 0,-1},{ 1, 0,-1},
+        {-1, 1,-1},{ 0, 1,-1},{ 1, 1,-1},
+        {-1,-1, 0},{ 0,-1, 0},{ 1,-1, 0},
+        {-1, 0, 0},              { 1, 0, 0},
+        {-1, 1, 0},{ 0, 1, 0},{ 1, 1, 0},
+        {-1,-1, 1},{ 0,-1, 1},{ 1,-1, 1},
+        {-1, 0, 1},{ 0, 0, 1},{ 1, 0, 1},
+        {-1, 1, 1},{ 0, 1, 1},{ 1, 1, 1}
+    };
 
-                int nx = pos.x + dx;
-                int ny = pos.y + dy;
-                int nz = pos.z + dz;
+    for (int i = 0; i < 26; ++i) {
+        const int nx = p.x + OFF[i][0];
+        const int ny = p.y + OFF[i][1];
+        const int nz = p.z + OFF[i][2];
 
-                if (nx < 0 || nx >= static_cast<int>(X_RANGE) ||
-                    ny < 0 || ny >= static_cast<int>(Y_RANGE) ||
-                    nz < 0 || nz >= static_cast<int>(Z_RANGE))
-                    continue;
-
-                auto neighbor = costmap(nx, ny, nz);
-
-                if (neighbor && heuristic(neighbor, node) < INF_FLOAT) {
-                    preds.push_back(neighbor);
-                }
-            }
+        if ((unsigned)nx >= (unsigned)W ||
+            (unsigned)ny >= (unsigned)H ||
+            (unsigned)nz >= (unsigned)D) {
+            continue;
         }
+
+        auto neighbor = costmap(nx, ny, nz);
+        if (!neighbor) continue;
+        if (neighbor->getOccupy()) continue;
+
+        // keep your existing admissibility/edge check minimal
+        preds.push_back(neighbor);
     }
 
     return preds;
