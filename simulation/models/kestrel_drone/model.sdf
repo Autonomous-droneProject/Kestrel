@@ -199,7 +199,7 @@
             <always_on>1</always_on>
             <update_rate>10</update_rate>
             <visualize>1</visualize>
-            <topic>/camera/rgb/image_raw</topic>
+            <topic>/camera/image_raw</topic>
 
             <plugin filename="CameraZoomPlugin"
                 name="CameraZoomPlugin">

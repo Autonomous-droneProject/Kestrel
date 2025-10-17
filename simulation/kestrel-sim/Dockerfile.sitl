@@ -1,0 +1,100 @@
+###########################################################
+# Stage 1: Build environment with all dependencies
+###########################################################
+FROM ubuntu:24.04 AS builder
+
+# Prevent interactive prompts during installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies required for building ArduPilot
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    lsb-release \
+    sudo \
+    wget \
+    git \
+    ccache \
+    g++ \
+    make \
+    cmake \
+    python3-dev \
+    python3-venv \
+    python3-pip \
+    python3-tk \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Set up the working directory and Python virtual environment
+WORKDIR /app
+ENV VIRTUAL_ENV=/app/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Install Python dependencies into the virtual environment
+RUN pip install --no-cache-dir -U pip setuptools wheel
+RUN pip install --no-cache-dir \
+    future \
+    lxml \
+    pexpect \
+    flake8 \
+    pycodestyle \
+    empy==3.3.4 \
+    pyelftools \
+    tabulate \
+    pre-commit \
+    junitparser \
+    pymavlink \
+    pyserial \
+    MAVProxy \
+    geocoder \
+    ptyprocess \
+    dronecan
+
+# Clone the ArduPilot repository
+WORKDIR /app
+# Use an ARG for the version, with a recent, stable default
+ARG ARDUPILOT_TAG=Copter-4.5
+RUN git clone https://github.com/ArduPilot/ardupilot.git ardupilot
+WORKDIR /app/ardupilot
+RUN git checkout ${ARDUPILOT_TAG}
+RUN git submodule update --init --recursive
+
+# Configure and build the SITL binary
+RUN ./waf configure --board sitl
+RUN ./waf copter
+
+###########################################################
+# Stage 2: Final runtime image
+###########################################################
+FROM ubuntu:24.04 AS final
+
+# Install only minimum runtime dependencies
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    g++ \
+    make \
+    cmake \
+    git \
+    python3-venv \
+    python3-pip \
+    python3-tk \
+    screen \
+    iproute2 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Copy the Python virtual environment and compiled ArduPilot from the builder stage
+COPY --from=builder /app/venv /app/venv
+COPY --from=builder /app/ardupilot /app/ardupilot
+
+# Set up the environment for the final image
+ENV VIRTUAL_ENV=/app/venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+ENV PATH="/app/ardupilot/Tools/autotest:$PATH"
+
+WORKDIR /app/ardupilot
+
+# Expose the default UDP port for QGroundControl
+EXPOSE 14550/udp
+
+# The ENTRYPOINT is crucial for connecting to QGC on the host.
+# --out udp:host.docker.internal:14550 forwards the MAVLink stream
+# to port 14550 on the host machine. 'host.docker.internal' is a
+# special DNS name that resolves to the host's IP address.
+ENTRYPOINT ["sim_vehicle.py", "-v", "ArduCopter", "-f", "gazebo-iris", "--model", "JSON"]

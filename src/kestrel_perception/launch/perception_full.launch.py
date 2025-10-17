@@ -2,7 +2,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, Command
 from launch_ros.actions import Node
 
 def generate_launch_description():
@@ -10,16 +10,16 @@ def generate_launch_description():
     # declare a launch argument so i can easily enable/disable the gui!!!
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
 
-    # get the path from the URDF file n shieet
-    urdf_path = PathJoinSubstitution([
+    # get the path to the URDF file
+    urdf_path = os.path.join(
         get_package_share_directory('kestrel_description'),
         'urdf',
         'kestrel_description.urdf'
-    ])
+    )
 
-    # now we need to process the damn URDF
-    with open(urdf_path.perform(LaunchDescription().context), 'r') as infp:
-        robot_description = infp.read()
+    # Read the URDF file content directly
+    with open(urdf_path, 'r') as infp:
+        robot_description_content = infp.read()
 
     # ok so this node is going to read the URDF
     # andd also publish the sensor transform to /tf_static
@@ -28,8 +28,8 @@ def generate_launch_description():
         executable='robot_state_publisher',
         name='robot_state_publisher',
         output='screen',
-        parameters =[{
-            'robot_description': robot_description,
+        parameters=[{
+            'robot_description': robot_description_content,
             'use_sim_time': use_sim_time
         }]
     )

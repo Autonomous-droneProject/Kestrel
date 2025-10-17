@@ -1,0 +1,82 @@
+# Dockerfile.gazebo_jazzy
+
+FROM ubuntu:24.04
+ARG ROS_DISTRO=jazzy
+ENV DEBIAN_FRONTEND=noninteractive
+
+# 1. Install basic tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      curl \
+      gnupg \
+      lsb-release \
+      software-properties-common \
+      git \
+      g++ \
+      cmake \
+      wget \
+      build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# 2. Add ROS 2 Jazzy apt repo
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+      | gpg --dearmor \
+      > /usr/share/keyrings/ros-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
+         http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" \
+      > /etc/apt/sources.list.d/ros2.list
+
+# 3. Add OSRF / Gazebo stable repo (for Harmonic / “noble”) — vendor support
+RUN curl -sSL https://packages.osrfoundation.org/gazebo.gpg \
+      | gpg --dearmor \
+      > /usr/share/keyrings/osrf-gazebo-archive-keyring.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/osrf-gazebo-archive-keyring.gpg] \
+         http://packages.osrfoundation.org/gazebo/ubuntu-stable noble main" \
+      > /etc/apt/sources.list.d/gazebo-stable.list
+
+# 4. Update apt
+RUN apt-get update
+
+# 5. Install ROS 2 base + Gazebo vendor packages
+RUN apt-get install -y --no-install-recommends \
+      ros-${ROS_DISTRO}-ros-base \
+      ros-${ROS_DISTRO}-gz-tools-vendor \
+      ros-${ROS_DISTRO}-gz-sim-vendor \
+      ros-${ROS_DISTRO}-ros-gz \
+      libgz-sim8-dev \
+      rapidjson-dev \
+      libopencv-dev \  
+      libgstreamer1.0-dev \
+      libgstreamer-plugins-base1.0-dev \
+      gstreamer1.0-plugins-bad \
+      gstreamer1.0-libav \
+      gstreamer1.0-gl \
+      python3-rosdep \
+      gz-harmonic \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV GZ_VERSION="harmonic"
+RUN mkdir -p /etc/ros/rosdep/sources.list.d/ && \
+    wget https://raw.githubusercontent.com/osrf/osrf-rosdep/master/gz/00-gazebo.list -O /etc/ros/rosdep/sources.list.d/00-gazebo.list
+RUN rosdep init && rosdep update
+RUN rosdep resolve gz-harmonic
+# TODO: clone the kestrel-sim repo. for now, let's just create a workspace
+RUN mkdir -p /kestrel/src
+WORKDIR /kestrel
+RUN rosdep install --from-paths src --ignore-src -y
+WORKDIR /
+
+# 8. Clone ardupilot_gazebo plugin
+RUN git clone https://github.com/ArduPilot/ardupilot_gazebo
+WORKDIR /ardupilot_gazebo
+RUN mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo && make -j$(nproc)
+ENV GZ_SIM_SYSTEM_PLUGIN_PATH="/ardupilot_gazebo/build"
+ENV GZ_SIM_RESOURCE_PATH="/ardupilot_gazebo/models:/ardupilot_gazebo/worlds"
+WORKDIR /
+
+# 9. Setup environment
+SHELL ["/bin/bash", "-c"]
+RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /etc/bash.bashrc
+
+# 10. Default command
+ENTRYPOINT ["gz", "sim", "-v4"]
+CMD ["-r", "iris_runway.sdf"]

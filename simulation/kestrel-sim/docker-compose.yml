@@ -1,0 +1,25 @@
+services:
+  sitl:
+    image: sitl
+    container_name: sitl
+    command: ["--out=udp:127.0.0.1:14551", "--console"]
+    tty: true
+    network_mode: "host"
+    stdin_open: true
+    environment:
+      - DISPLAY=${DISPLAY}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+
+  gazebo:
+    image: gazebo-harmonic
+    container_name: gazebo
+    depends_on:
+      - sitl
+    network_mode: "service:sitl"
+    tty: true
+    stdin_open: true
+    environment:
+      - DISPLAY=${DISPLAY}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
