@@ -80,3 +80,40 @@ Solution:
     - Run QGC on the host
 
 If you're on Windows, install QGC on windows, not WSL.
+Make a link in QGC for udp connection on port 14551
+
+Docker compose yaml file mounts build and install directories in docker so that builds are persistent
+
+The first time you run the containers you must colcon build from the root of the workspace (kestre/)
+there is a chance you run into dependency issues due to rosdep not installing everything in the build face,
+if that is the case, do the following on the root of the workspace:
+    - rosdep install --from-paths src --ignore-src -r -y
+
+then rebuild:
+    - colcon build
+
+The containers will start up a bash shell, to run:
+    docker compose up -d
+On separate terminals:
+    docker compose attach gazebo
+    docker compose attach sitl
+
+How to run a world with the containers
+On the gazebo terminal:
+    gz sim -v4 -r <name-of-sdf-file>
+
+This starts gazebo with the world file provided
+
+On the sitl terminal:
+    sim_vehicle.py -v ArduCopter -f gazebo-iris --model JSON --out=udp:127.0.0.1:14551 --map --console
+
+This starts sitl with an output port 14551 for QGC
+
+Because of the way the code is setup, you can modify the source code in your IDE and the changes will automatically
+be passed to the container, you can then build and run the code inside the container so you can essentially treat it as a full
+development environment. 
+
+you can open multiple terminals by doing 
+docker compose exec gazebo
+
+you can do this to launch multiple packages together.

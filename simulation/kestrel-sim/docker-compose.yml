@@ -1,8 +1,11 @@
 services:
   sitl:
+    build:
+        context: .
+        dockerfile: Dockerfile.sitl
     image: sitl
     container_name: sitl
-    command: ["--out=udp:127.0.0.1:14551", "--console"]
+    #command: ["--out=udp:127.0.0.1:14551", "--console"]
     tty: true
     network_mode: "host"
     stdin_open: true
@@ -12,6 +15,9 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
 
   gazebo:
+    build:
+        context: .
+        dockerfile: Dockerfile.gazebo
     image: gazebo-harmonic
     container_name: gazebo
     depends_on:
@@ -22,4 +28,14 @@ services:
     environment:
       - DISPLAY=${DISPLAY}
     volumes:
+      - ../../src:/kestrel/src           # directly editable code
+      - ../models:/kestrel/sim/models        # directly editable models
+      - ../worlds:/kestrel/sim/worlds        # directly editable worlds
+      - ../launch:/kestrel/sim/launch      # directly editable launch files
+      - kestrel_build:/kestrel/build         # persistent build cache
+      - kestrel_install:/kestrel/install     # persistent install outputs
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
+
+volumes:
+  kestrel_build:
+  kestrel_install:

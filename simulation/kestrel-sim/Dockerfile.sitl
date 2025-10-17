@@ -97,4 +97,5 @@ EXPOSE 14550/udp
 # --out udp:host.docker.internal:14550 forwards the MAVLink stream
 # to port 14550 on the host machine. 'host.docker.internal' is a
 # special DNS name that resolves to the host's IP address.
-ENTRYPOINT ["sim_vehicle.py", "-v", "ArduCopter", "-f", "gazebo-iris", "--model", "JSON"]
+#ENTRYPOINT ["sim_vehicle.py", "-v", "ArduCopter", "-f", "gazebo-iris", "--model", "JSON", "--out=udp:127.0.0.1:14551", "--console"]
+ENTRYPOINT ["/bin/bash"]
