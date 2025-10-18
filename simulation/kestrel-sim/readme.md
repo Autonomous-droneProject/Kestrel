@@ -91,7 +91,7 @@ Then try building again.
     gz sim -v4 -r <name-of-sdf-file> 
     ```
 
-the simulation environment includes a variety of worlds located in the `kestrel/simulation/kestrel-sim/worlds` folder. You can choose any of the sdf files located there. For example, to start the base world, run:
+the simulation environment includes a variety of worlds located in the `kestrel/simulation/worlds` folder. You can choose any of the sdf files located there. For example, to start the base world, run:
 
     gz sim -v4 -r baseWorld.sdf
 
