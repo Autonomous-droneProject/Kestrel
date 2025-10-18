@@ -15,11 +15,67 @@ import numpy as np
 
 from rclpy.time import Time
 from rclpy.clock import Clock
+import math
+
 
 def set_header(msg, node, frame_id="map"):
     msg.header.frame_id = frame_id
     msg.header.stamp = node.get_clock().now().to_msg()
     return msg
+
+def make_sphere(a, b, c, r, resolution=20):
+    """
+    Generate (x, y, z) points on a sphere centered at (a, b, c) with radius r.
+
+    Args:
+        a, b, c (float): Center of the sphere
+        r (float): Radius of the sphere
+        resolution (int): Number of steps for theta and phi (controls density)
+
+    Returns:
+        list[tuple[float, float, float]]: Points on the sphere surface
+    """
+    points = []
+    for i in range(resolution + 1):
+        theta = math.pi * i / resolution  # polar angle (0 to pi)
+        for j in range(resolution * 2 + 1):
+            phi = 2 * math.pi * j / (resolution * 2)  # azimuthal angle (0 to 2pi)
+            x = int(a + r * math.sin(theta) * math.cos(phi))
+            y = int(b + r * math.sin(theta) * math.sin(phi))
+            z = int(c + r * math.cos(theta))
+            if x >= 0 and y >= 0 and z >= 0:
+                points.append((x, y, z))
+    return points
+
+
+def make_wall_zy(x, y, z, size, resolution=20):
+    """
+    Generate (x, y, z) points on a flat wall lying on the ZY-plane (x is constant).
+
+    Args:
+        x, y, z (float): Center of the wall
+        size (float): Half-size (total height/width = 2*size)
+        resolution (int): Number of points along each axis
+
+    Returns:
+        list[tuple[int, int, int]]: Points on the wall surface
+    """
+    points = []
+    for i in range(resolution + 1):
+        for j in range(resolution + 1):
+            py = int(y - size + 2 * size * (i / resolution))  # vertical (Y)
+            pz = int(z - size + 2 * size * (j / resolution))  # depth (Z)
+            px = int(x)  # constant X value
+            if px >= 0 and py >= 0 and pz >= 0:
+                points.append((px, py, pz))
+    return points
+
+def make_line(x, y, z, size):
+    points = []
+    for i in range(size + 1):
+        for j in range(size + 1):
+            points.append((x, y+i, j))
+    return points 
 
 class PlannerTest(Node):
     def __init__(self):
@@ -216,7 +272,8 @@ class TestKestrelPlanning(unittest.TestCase):
         
         self.wait_for_subscribers()
         self.node.reset_tracking()
-        obstacles = [(10,10, 0), (10,13, 5), (5,5, 0), (24,24,4), (10,10,1), (19,19,2)]
+        obstacles = make_line(0, 15, 0, 5)
+        #obstacles = [(10,10, 0), (10,13, 5), (5,5, 0), (24,24,4), (10,10,1), (19,19,2)]
         obstacle_grid = self.create_obstacle_grid(width=50, height=50, depth=30, obstacles=obstacles)
         self.node.obstacle_grid_pub.publish(obstacle_grid)
         print("sent obstacle grid")
@@ -227,7 +284,7 @@ class TestKestrelPlanning(unittest.TestCase):
         print("sent current pose")
         time.sleep(0.5)
 
-        goal = self.create_position_target(25.0, 25.0, 5.0)
+        goal = self.create_position_target(0.0, 45.0, 0.0)
         self.node.setpoint_pub.publish(goal)
         print("sent goal")
         time.sleep(1.0)
@@ -243,7 +300,26 @@ class TestKestrelPlanning(unittest.TestCase):
         self.assertIsNotNone(self.node.received_path, "Path is None")
         self.assertGreater(len(self.node.received_path.poses), 0, "Path is empty")
 
+        current_pose = self.create_pose_stamped(0.0, 45.0, 0.0)
+        self.node.local_pose_pub.publish(current_pose)
+
+
         print(f"Basic planning successful: {len(self.node.received_path.poses)} waypoints")
+        print("testing a replan")
+        goal = self.create_position_target(0.0, 0.0, 0.0)
+        self.node.setpoint_pub.publish(goal)
+        print("sent goal")
+        time.sleep(1.0)
+
+
+        path_received = self.wait_for_path(timeout=500)
+        self.assertTrue(path_received, "No path received from planner")
+        self.assertIsNotNone(self.node.received_path, "Path is None")
+        self.assertGreater(len(self.node.received_path.poses), 0, "Path is empty")
+
+
+
+    
 
 
 if __name__ == '__main__':
