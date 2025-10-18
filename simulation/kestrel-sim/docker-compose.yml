@@ -5,7 +5,6 @@ services:
         dockerfile: Dockerfile.sitl
     image: sitl
     container_name: sitl
-    #command: ["--out=udp:127.0.0.1:14551", "--console"]
     tty: true
     network_mode: "host"
     stdin_open: true
@@ -14,12 +13,12 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
 
-  gazebo:
+  gazebo-ros2:
     build:
         context: .
-        dockerfile: Dockerfile.gazebo
-    image: gazebo-harmonic
-    container_name: gazebo
+        dockerfile: Dockerfile.gazebo_ros2
+    image: gazebo-ros2
+    container_name: gazebo-ros2
     depends_on:
       - sitl
     network_mode: "service:sitl"

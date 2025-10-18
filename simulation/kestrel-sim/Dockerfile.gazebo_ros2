@@ -84,7 +84,5 @@ WORKDIR /
 SHELL ["/bin/bash", "-c"]
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> /etc/bash.bashrc
 
-# 10. Default command
-# ENTRYPOINT ["gz", "sim", "-v4"]
-# CMD ["-r", "iris_runway.sdf"]
+# 10. entrypoint
 ENTRYPOINT ["/bin/bash"]
