@@ -1,48 +1,81 @@
-
 #include "dstar_planner.hpp"
 #include <cmath>
 #include <algorithm>
+#include <utility>
+#include <tuple>
+
+// Add this block here ↓↓↓
+namespace {
+constexpr int OFF26[26][3] = {
+    {-1,-1,-1},{ 0,-1,-1},{ 1,-1,-1},
+    {-1, 0,-1},{ 0, 0,-1},{ 1, 0,-1},
+    {-1, 1,-1},{ 0, 1,-1},{ 1, 1,-1},
+    {-1,-1, 0},{ 0,-1, 0},{ 1,-1, 0},
+    {-1, 0, 0},              { 1, 0, 0},
+    {-1, 1, 0},{ 0, 1, 0},{ 1, 1, 0},
+    {-1,-1, 1},{ 0,-1, 1},{ 1,-1, 1},
+    {-1, 0, 1},{ 0, 0, 1},{ 1, 0, 1},
+    {-1, 1, 1},{ 0, 1, 1},{ 1, 1, 1}
+};
+}
+// ← stop here. Do not put anything else in this namespace.
+
+static inline float heuristic_point(const vec3& s, const vec3& u) {
+    float dx = std::fabs(float(s.x) - float(u.x));
+    float dy = std::fabs(float(s.y) - float(u.y));
+    float dz = std::fabs(float(s.z) - float(u.z));
+    if (dy > dx) std::swap(dx, dy);
+    if (dz > dx) std::swap(dx, dz);
+    if (dz > dy) std::swap(dz, dy);
+    return (dx - dy) + (dy - dz) * std::sqrt(2.0f) + dz * std::sqrt(3.0f);
+}
+
 
 void DSTARLITE::initialize() {
     std::cout << "[PATHING START] dstarlite initializing" << std::endl;
-    costmap.clear();
+
+    // reset planner bookkeeping
     km = 0.0f;
-    while (!open_list.empty()) {
-        open_list.pop();
-    }
+    while (!open_list.empty()) open_list.pop();
     open_set.clear();
 
-    for (uint32_t x = 0; x < X_RANGE; ++x) {
-        for (uint32_t y = 0; y < Y_RANGE; ++y) {
-            for (uint32_t z = 0; z < Z_RANGE; ++z) {
-                auto cell_state = std::make_shared<state>();
-                cell_state->setPoint(vec3(x, y, z));
-                cell_state->setG(INF_FLOAT);
-                cell_state->setRHS(INF_FLOAT);
-                cell_state->setNextStep(nullptr);
-                costmap.insert(cell_state, cell_state->getPoint());
+    // build cells only once; keep existing grid/state if already built
+    if (!costmap(0,0,0)) {
+        for (uint32_t x = 0; x < X_RANGE; ++x) {
+            for (uint32_t y = 0; y < Y_RANGE; ++y) {
+                for (uint32_t z = 0; z < Z_RANGE; ++z) {
+                    auto cell_state = std::make_shared<state>();
+                    cell_state->setPoint(vec3(x, y, z));
+                    cell_state->setG(INF_FLOAT);
+                    cell_state->setRHS(INF_FLOAT);
+                    cell_state->setNextStep(nullptr);
+                    costmap.insert(cell_state, cell_state->getPoint());
+                }
             }
         }
     }
-    
-    goal_state = costmap(goal.x, goal.y, goal.z);
-    start_state = costmap(start.x, start.y, start.z);
 
+    goal_state  = costmap(goal.x,  goal.y,  goal.z);
+    start_state = costmap(start.x, start.y, start.z);
     if (!goal_state || !start_state) {
         std::cerr << "[ERROR]: Start or goal not found in costmap\n";
         return;
     }
 
+    // standard D* Lite init: only goal’s RHS = 0; don’t nuke entire grid
     goal_state->setG(INF_FLOAT);
     goal_state->setRHS(0.0f);
     goal_state->setNextStep(nullptr);
     goal_state->setkey(calculateKey(goal_state));
-    
+
+    // start begins inconsistent; path search will set values
     start_state->setG(INF_FLOAT);
     start_state->setRHS(INF_FLOAT);
     start_state->setNextStep(nullptr);
+
     insertOpenList(goal_state);
 }
+
 
 float DSTARLITE::edgeCost(const std::shared_ptr<state>& a, const std::shared_ptr<state>& b) {
     const auto& A = a->getPoint();
@@ -53,10 +86,12 @@ float DSTARLITE::edgeCost(const std::shared_ptr<state>& a, const std::shared_ptr
     return std::sqrt(dx*dx + dy*dy + dz*dz);
 }
 
-void DSTARLITE::insertOpenList(std::shared_ptr<state> node) {
+ void DSTARLITE::insertOpenList(std::shared_ptr<state> node) {
     auto key = calculateKey(node);
+    node->setkey(key);
 
-    if (isInOpenList(node)) open_set.erase(node);
+    if (isInOpenList(node))
+        open_set.erase(node);
 
     open_list.push(std::make_pair(key, node));
     open_set.insert(node);
@@ -66,26 +101,64 @@ void DSTARLITE::insertOpenList(std::shared_ptr<state> node) {
 }
 
 
+
 bool DSTARLITE::isInOpenList(std::shared_ptr<state> node) {
     return open_set.find(node) != open_set.end();
 }
 
+std::shared_ptr<state> DSTARLITE::topOpenList() {
+    while (!open_list.empty()) {
+        auto [qkey, node] = open_list.top();
+
+        // 1) drop if node was logically removed
+        if (open_set.find(node) == open_set.end()) {
+            open_list.pop();
+            continue;
+        }
+
+        // 2) use the node's cached key; only recompute if it changed
+        const auto cached = node->getKey();  // requires state::{getKey,setkey}()
+
+        // If queue key != cached, refresh cached once
+        if (std::tie(qkey.first, qkey.second) != std::tie(cached.first, cached.second)) {
+            const auto new_key = calculateKey(node);  // recompute once
+            node->setkey(new_key);
+
+            // If the new key is *worse* than what’s in the queue, requeue with the new key
+            if (std::tie(qkey.first, qkey.second) < std::tie(new_key.first, new_key.second)) {
+                open_set.erase(node);     // mark old entry invalid
+                open_list.pop();          // remove stale heap entry
+                insertOpenList(node);     // push with updated key (also caches it)
+                continue;                 // re-check new top
+            }
+        }
+
+        // Keys agree (or improved); accept this node
+        return node;
+    }
+    return nullptr;
+}
 
 
 std::pair<float,float> DSTARLITE::calculateKey(std::shared_ptr<state> u) {
-    float val = std::min(u->getG(), u->getRHS());
-
-    return { val + heuristic(start_state, u) + km, val };
+    const float val = std::min(u->getG(), u->getRHS());
+    // pointer-free heuristic; identical formula, less overhead
+    const float h = heuristic_point(start_state->getPoint(), u->getPoint());
+    return { val + h + km, val };
 }
+
 
 
 std::vector<std::shared_ptr<state>> DSTARLITE::getSuccessors(std::shared_ptr<state> node) {
     std::vector<std::shared_ptr<state>> succs;
-    succs.reserve(26);  // 3D neighborhood size
+    succs.reserve(26);
 
     const vec3 p = node->getPoint();
+    const int W = static_cast<int>(X_RANGE);
+    const int H = static_cast<int>(Y_RANGE);
+    const int D = static_cast<int>(Z_RANGE);
 
-    // 26 fixed offsets for 3D adjacency (no {0,0,0})
+    // 26-neighborhood offsets (no {0,0,0})
     static constexpr int OFF[26][3] = {
         {-1,-1,-1},{ 0,-1,-1},{ 1,-1,-1},
         {-1, 0,-1},{ 0, 0,-1},{ 1, 0,-1},
@@ -98,33 +171,23 @@ std::vector<std::shared_ptr<state>> DSTARLITE::getSuccessors(std::shared_ptr<sta
         {-1, 1, 1},{ 0, 1, 1},{ 1, 1, 1}
     };
 
-    const int W = static_cast<int>(X_RANGE);
-    const int H = static_cast<int>(Y_RANGE);
-    const int D = static_cast<int>(Z_RANGE);
-
     for (int i = 0; i < 26; ++i) {
-        const int nx = p.x + OFF[i][0];
-        const int ny = p.y + OFF[i][1];
-        const int nz = p.z + OFF[i][2];
+        const int nx = p.x + OFF26[i][0];
+        const int ny = p.y + OFF26[i][1];
+        const int nz = p.z + OFF26[i][2];
+
 
         if ((unsigned)nx >= (unsigned)W ||
             (unsigned)ny >= (unsigned)H ||
-            (unsigned)nz >= (unsigned)D) {
-            continue;
-        }
+            (unsigned)nz >= (unsigned)D) continue;
 
-        // one costmap lookup only
-        auto neighbor = costmap(nx, ny, nz);
-        if (!neighbor) continue;
-
-        // single occupancy check, no repeated call
-        if (!neighbor->getOccupy()) {
-            succs.push_back(neighbor);
-        }
+        auto n = costmap(nx, ny, nz);     // single lookup
+        if (!n) continue;
+        if (!n->getOccupy()) succs.push_back(n);  // single occupancy check
     }
-
     return succs;
 }
+
 
 
 
@@ -156,18 +219,13 @@ std::vector<std::shared_ptr<state>> DSTARLITE::getPredecessors(std::shared_ptr<s
 
         if ((unsigned)nx >= (unsigned)W ||
             (unsigned)ny >= (unsigned)H ||
-            (unsigned)nz >= (unsigned)D) {
-            continue;
-        }
+            (unsigned)nz >= (unsigned)D) continue;
 
-        auto neighbor = costmap(nx, ny, nz);
-        if (!neighbor) continue;
-        if (neighbor->getOccupy()) continue;
-
-        // keep your existing admissibility/edge check minimal
-        preds.push_back(neighbor);
+        auto n = costmap(nx, ny, nz);
+        if (!n) continue;
+        if (n->getOccupy()) continue;
+        preds.push_back(n);
     }
-
     return preds;
 }
 
@@ -181,26 +239,18 @@ bool DSTARLITE::openListEmpty() {
 }
 
 
-void DSTARLITE::removeFromOpenList(std::shared_ptr<state> node) {
-    open_set.erase(node);
-    
-}
-
 int DSTARLITE::computeShortestPath() {
     uint32_t count = 0;
 
     while (!openListEmpty()) {
-        auto topPair = open_list.top();
-        auto u = topPair.second;
+        std::shared_ptr<state> u = topOpenList();
+        if (!u) break;
 
-        auto topKey = calculateKey(u);
-        auto startKey = calculateKey(start_state);
+        const auto startKey = calculateKey(start_state);
+        const auto uKey     = u->getKey();   // cached; kept fresh by topOpenList()
 
-        if (!(topKey < startKey || start_state->getRHS() != start_state->getG()))
+        if (!(uKey < startKey || start_state->getRHS() != start_state->getG()))
             break;
-
-        u = topOpenList();
-        if (!u) break; 
 
         removeFromOpenList(u);
 
@@ -220,6 +270,7 @@ int DSTARLITE::computeShortestPath() {
     }
     return count;
 }
+
 
 
 
@@ -262,25 +313,7 @@ float DSTARLITE::heuristic(std::shared_ptr<state> s, std::shared_ptr<state> u) {
     );
 }
 
-std::shared_ptr<state> DSTARLITE::topOpenList() {
-    while (!open_list.empty()) {
-        auto [oldKey, node] = open_list.top();
 
-        if (open_set.find(node) == open_set.end()) { open_list.pop(); continue; }
-
-        auto newKey = calculateKey(node);
-        if (std::tie(oldKey.first, oldKey.second) <
-            std::tie(newKey.first, newKey.second)) {
-            open_set.erase(node);            
-            open_list.pop();                
-            insertOpenList(node);            
-            continue;                        
-        }
-
-        return node;
-    }
-    return nullptr;
-}
 
 int DSTARLITE::extractPath(std::vector<geometry_msgs::msg::PoseStamped> &waypoints) {
     std::shared_ptr<state> node = costmap(start.x, start.y, start.z);
@@ -331,12 +364,10 @@ int DSTARLITE::extractPath(std::vector<geometry_msgs::msg::PoseStamped> &waypoin
 }
 
 bool DSTARLITE::isOccupied(int x, int y, int z) {
-    std::shared_ptr<state>&s = costmap(x, y, z);
-    if (!s) {
-        return false;
-    }
-    return s->getOccupy();
+    auto s = costmap(x, y, z);
+    return s ? s->getOccupy() : false;
 }
+
 
 void DSTARLITE::setOccupied(int x, int y, int z) {
     auto state_occupied = costmap(x, y, z);
@@ -370,7 +401,7 @@ void DSTARLITE::replan(float x, float y, float z) {
     setOccupied(px, py, pz);
     auto node = costmap(px, py, pz);
     
-    updateVertex(node);
+       updateVertex(node);
     for (auto neighbor : getSuccessors(node)) {
         updateVertex(neighbor);
     }
@@ -379,4 +410,7 @@ void DSTARLITE::replan(float x, float y, float z) {
     }
 
     computeShortestPath();
+}  // <-- end of replan()
+void DSTARLITE::removeFromOpenList(std::shared_ptr<state> node) {
+    open_set.erase(node);
 }
