@@ -77,68 +77,39 @@ struct vec3 {
 
 
 class state {
-    public:
-        state() {};
-        state(int a, int b, int c) {
-            point = vec3(a,b,c);
-        }
+public:
+    state() : point(), g(0.0f), rhs(0.0f), rhs_from(nullptr), key({0.0f, 0.0f}), occupied(false) {}
+    state(int a, int b, int c) : point(a,b,c), g(0.0f), rhs(0.0f), rhs_from(nullptr), key({0.0f, 0.0f}), occupied(false) {}
 
-        void setG(float _g) {
-            g = _g;
-        }
-        void setRHS(float _rhs) {
-            rhs = _rhs;
-        }
-        float getG() {
-            return g;
-        }
-        float getRHS() {
-            return rhs;
-        }
-        void setPoint(vec3 pt) {
-            point = pt;
-        }
-        vec3 getPoint() const {
-            return point;
-        }
-        bool isConsistent() {
-            const float EPS = 1e-5f;
-            return std::abs(g - rhs) < EPS;
-        }
+    void  setG(float v)               { g = v; }
+    void  setRHS(float v)             { rhs = v; }
+    float getG() const                { return g; }
+    float getRHS() const              { return rhs; }
 
-        bool isOverConsistent() {
-            return (g > rhs);
-        }
-        std::shared_ptr<state> nextStep() {
-            return rhs_from;
-        }
-        void setNextStep(std::shared_ptr<state> u) {
-            rhs_from = u;
-        }
-        void setkey(std::pair<float,float> k ) {
-            key = k;
-        }
-        std::pair<float,float> getKey() {
-            return key;
-        }
-        void setOccupation(bool val) {
-            occupied = val;
-        }
-        bool getOccupy() {
-            return occupied;
-        }
-        
+    void  setPoint(vec3 pt)           { point = pt; }
+    vec3  getPoint() const            { return point; }
 
+    bool  isConsistent() const        { const float EPS = 1e-5f; return std::abs(g - rhs) < EPS; }
+    bool  isOverConsistent() const    { return g > rhs; }
 
-    private:
-        vec3 point;
-        float g, rhs;
-        std::shared_ptr<state> rhs_from;
-        std::pair<float,float> key;
-        bool occupied;
-        
+    std::shared_ptr<state> nextStep() const      { return rhs_from; }
+    void  setNextStep(std::shared_ptr<state> u)  { rhs_from = std::move(u); }
+
+    // key API (lowercase is canonical; CamelCase alias provided)
+    void setkey(const std::pair<float,float>& k) { key = k; }
+    void setKey (const std::pair<float,float>& k){ setkey(k); }
+    std::pair<float,float> getKey() const        { return key; }
+
+    void setOccupation(bool v)        { occupied = v; }
+    bool getOccupy() const            { return occupied; }
+
+private:
+    vec3 point;
+    float g, rhs;
+    std::shared_ptr<state> rhs_from;
+    std::pair<float,float> key;
+    bool occupied;
 };
-
 
 inline bool isEqual(float a, float b) {
     if (abs(a - b) <= TOL) {
