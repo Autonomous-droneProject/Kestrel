@@ -1,3 +1,4 @@
+
 cmake_minimum_required(VERSION 3.10)
 project(kestrel_planning)
 
@@ -43,11 +44,4 @@ install(DIRECTORY include/
   DESTINATION include/
 )
 
-find_package(ament_cmake_pytest REQUIRED)
-
-ament_add_pytest_test(
-  kestrel_planning_pytests
-  test/test_waypoints.py
-)
-
-
+ament_package()
