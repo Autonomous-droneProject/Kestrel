@@ -202,3 +202,5 @@ Note: Make sure that the GeographicLib datasets are installed. If not, you can i
 - If you delete the container, you won't lose the volumes where the build files are stored, so you won't need to rebuild everything from scratch.
 
 - If you installed new GeographicLib datasets, make sure to copy them to `/usr/local/share/GeographicLib/` inside the gazebo-ros2 container, as described above. You won't need to do this step again unless you delete the container.
+
+- If you are in Windows, clone the repo inside WSL, but use QGC for Windows.
