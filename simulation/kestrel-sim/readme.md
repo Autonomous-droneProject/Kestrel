@@ -6,6 +6,7 @@ Do you want to test, debug, and develop autonomous drones? Project Kestrel has d
 
     Qgroundcontrol (QGC)
     Docker desktop
+    git
     At least 8GB of RAM
     At least intel i5 or equivalent
 
@@ -29,8 +30,9 @@ Furthemore, if you are in a macOS machine, you need to look up how to get GUI's 
 
    ```bash
    git clone https://github.com/Autonomous-droneProject/Kestrel.git
+   cd Kestrel
    git checkout kestrel-sim-env
-   cd Kestrel/simulation/kestrel-sim
+   cd simulation/kestrel-sim
    ```
 
 2. Build the Docker images:
@@ -69,13 +71,20 @@ Another thing to note is that the build files are stored inside a Docker volume,
 The gazebo-ros2 container has all the models, worlds, and launch files included. You can add more models and worlds by adding them to the respective folders in the repository. If this is your first time running the gazebo-ros2 container, you might want to build the workspace first. To do that, run the following commands inside the gazebo-ros2 container:
 
     cd /kestrel
+    apt update
+    rosdep install --from-paths src --ignore-src -r -y
     colcon build
+
+if building takes a lot of memory, you can try this:
+
+    export MAKEFLAGS="-j 1"
+    colcon build --executor sequential
 
 Note: you always need to source the workspace before running any ROS2 commands. You can do that by running:
 
     source /kestrel/install/setup.bash
 
-It's possible you might run into errors in the build process due to missing dependencies. If that happens run the following command from the root of the workspace to install the missing dependencies:
+if you ever encounter issues with missing dependencies, try this:
 
     cd /kestrel
     apt update
