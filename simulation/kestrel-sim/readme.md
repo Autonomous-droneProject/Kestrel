@@ -155,7 +155,7 @@ Below is a list of the main ROS2 packages included in the simulation environment
 
 Note: Make sure that the GeographicLib datasets are installed. If not, you can install them by running:
 
-    ./kestrel/src/libraries/mavros/mavros/scripts/install_geographiclib_datasets.sh
+    source /kestrel/src/libraries/mavros/mavros/scripts/install_geographiclib_datasets.sh
     cp -r /usr/share/GeographicLib/  /usr/local/share/
 
 #### Perception & Sensor Fusion
@@ -204,3 +204,18 @@ Note: Make sure that the GeographicLib datasets are installed. If not, you can i
 - If you installed new GeographicLib datasets, make sure to copy them to `/usr/local/share/GeographicLib/` inside the gazebo-ros2 container, as described above. You won't need to do this step again unless you delete the container.
 
 - If you are in Windows, clone the repo inside WSL, but use QGC for Windows.
+
+- changing modes in MAVROS:
+    
+    ```bash
+    ros2 service call  /mavros/set_mode mavros_msgs/srv/SetMode "custom_mode: 'AUTO'"
+    ```
+
+- if you get a message saying that install_geographiclib_datasets.sh could not be found, run this:
+
+    ```bash
+    apt update
+    apt install dos2unix
+    dos2unix /kestrel/src/libraries/mavros/mavros/scripts/install_geographiclib_datasets.sh
+    ```
+    then run the script again.

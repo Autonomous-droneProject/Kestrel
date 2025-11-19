@@ -16,9 +16,9 @@ void TelemetryManagerNode::initialize()
 {
   // setup subscribers
   battery_sub_ = this->create_subscription<sensor_msgs::msg::BatteryState>(
-    "mavros/battery", 10, std::bind(&TelemetryManagerNode::battery_callback, this, std::placeholders::_1));
+    "mavros/battery", rclcpp::QoS(rclcpp::SensorDataQoS()), std::bind(&TelemetryManagerNode::battery_callback, this, std::placeholders::_1));
   mavros_state_sub_ = this->create_subscription<mavros_msgs::msg::State>(
-    "mavros/state", 10, std::bind(&TelemetryManagerNode::mavros_state_callback, this, std::placeholders::_1));
+    "mavros/state", rclcpp::QoS(rclcpp::SensorDataQoS()), std::bind(&TelemetryManagerNode::mavros_state_callback, this, std::placeholders::_1));
 
   // setup publishers
   flight_status_pub_ = this->create_publisher<kestrel_msgs::msg::FlightStatus>("drone/flight_status", 10);
