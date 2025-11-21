@@ -6,7 +6,7 @@ mavros:
   # - "serial:///dev/ttyACM0:57600" for usb
   # - "udp://:14550@" for udp
   # im guessing man please update it once we get the HARDWARE
-  fcu_url: "udp://127.0.0.1:14551@14555"
+  fcu_url: "udp://127.0.0.1:14550@14555"
 
   # frames used by mavros
   # ENSURE THESE MATCH UR TF TREE!!!

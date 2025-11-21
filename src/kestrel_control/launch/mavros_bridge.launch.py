@@ -14,11 +14,14 @@ def generate_launch_description():
         XMLLaunchDescriptionSource(
             os.path.join(get_package_share_directory('mavros'), 'launch', 'apm.launch')
         ),
-        launch_arguments={
-            'fcu_url': os.path.join(
-                get_package_share_directory('kestrel_control'), 'config', 'ardupilot_interface.yaml'
-            )
-        }.items()
+        # I have modified the apm.launch file in the mavros package since I built it from source
+        # so the launch argument is not needed here
+        
+        # launch_arguments={
+        #     'fcu_url': os.path.join(
+        #         get_package_share_directory('kestrel_control'), 'config', 'ardupilot_interface.yaml'
+        #     )
+        # }.items()
     )
 
     return LaunchDescription([
