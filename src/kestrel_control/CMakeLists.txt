@@ -48,6 +48,7 @@ add_executable(ardupilot_translator_node src/ardupilot_translator_node.cpp)
 add_executable(command_validator_node src/command_validator_node.cpp)
 add_executable(dynamic_camera_control_node src/dynamic_camera_control_node.cpp)
 add_executable(frame_transformer_node src/frame_transformer_node.cpp)
+add_executable(servo_to_mavros_bridge src/servo_to_mavros_bridge.cpp)
 
 # Link dependencies
 #ament_target_dependencies(ardupilot_translator_node "rclcpp" "geometry_msgs" "mavros_msgs")
@@ -59,6 +60,7 @@ target_link_libraries(ardupilot_translator_node PUBLIC kestrel_control_lib)
 target_link_libraries(command_validator_node PUBLIC kestrel_control_lib)
 target_link_libraries(dynamic_camera_control_node PUBLIC kestrel_control_lib)
 target_link_libraries(frame_transformer_node PUBLIC kestrel_control_lib)
+target_link_libraries(servo_to_mavros_bridge PUBLIC kestrel_control_lib)
 
 
 
@@ -68,6 +70,7 @@ install(TARGETS
   command_validator_node
   dynamic_camera_control_node
   frame_transformer_node
+  servo_to_mavros_bridge
   DESTINATION lib/${PROJECT_NAME}
 )
 

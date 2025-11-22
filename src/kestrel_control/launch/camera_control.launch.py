@@ -24,6 +24,13 @@ def generate_launch_description():
         ]
     )
 
+    servo_bridge_node = Node(
+        package='kestrel_control',
+        executable='servo_to_mavros_bridge',
+        name='servo_to_mavros_bridge'
+    )
+
     return LaunchDescription([
-        dynamic_camera_control_node
+        dynamic_camera_control_node,
+        servo_bridge_node
     ])
