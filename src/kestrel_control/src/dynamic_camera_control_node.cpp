@@ -90,8 +90,8 @@ void DynamicCameraControlNode::update_position_callback(
   double x_err = 0.0 - msg->pose.position.x; // Center - object position x
   double y_err = 0.0 - msg->pose.position.y; // Center - object position y
 
-  double x_angle = x_pid_controller.computeCommand(x_err, dt_sec);
-  double y_angle = y_pid_controller.computeCommand(y_err, dt_sec);
+  double x_angle = x_pid_controller.compute_command(x_err, dt_sec);
+  double y_angle = y_pid_controller.compute_command(y_err, dt_sec);
 
     RCLCPP_INFO(this->get_logger(), 
     "Errors: x=%.2f y=%.2f, dt=%.3f, PID out: x=%.2f y=%.2f", 
