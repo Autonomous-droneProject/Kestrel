@@ -51,6 +51,12 @@ DynamicCameraControlNode::DynamicCameraControlNode(
   i_max_ = this->get_parameter("camera_control_pid.i_max").as_double();
   aw_ = this->get_parameter("camera_control_pid.antiwindup").as_bool();
 
+    RCLCPP_INFO(this->get_logger(), "Loaded gains - Pan: P=%.2f I=%.2f D=%.2f, Tilt: P=%.2f I=%.2f D=%.2f", 
+            pan_p_, pan_i_, pan_d_, tilt_p_, tilt_i_, tilt_d_);
+    RCLCPP_INFO(this->get_logger(), "Limits - i_min=%.2f i_max=%.2f antiwindup=%d",
+            i_min_, i_max_, aw_);
+
+
   x_pid_controller = control_toolbox::Pid(); // using default constructor
   y_pid_controller = control_toolbox::Pid();
 
