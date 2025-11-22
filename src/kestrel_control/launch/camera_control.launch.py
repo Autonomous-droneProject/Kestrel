@@ -18,7 +18,10 @@ def generate_launch_description():
         package='kestrel_control',
         executable='dynamic_camera_control_node',
         name='dynamic_camera_control_node',
-        parameters=[pid_gains_path, servo_params_path]
+        parameters=[pid_gains_path, servo_params_path],
+        remappings=[
+            ('odom', '/mavros/local_position/pose'),  # connecting to real drone position!!!
+        ]
     )
 
     return LaunchDescription([
