@@ -1,22 +1,20 @@
 # defines the operational limits and calibration values for the camera servos
+dynamic_camera_control_node:
+  ros__parameters:
+    camera_servos:
+      # parameters for the pan (left/right) servo
+      pan_servo:
+        # the pwm channel the servo is connected to
+        channel: 0
+        # min/max pulse width in microseconds (us)
+        min_pulse_us: 500
+        max_pulse_us: 2500
+        # the neutral position pulse width
+        neutral_pulse_us: 1500
 
-camera_servos:
-  # parameters for the pan (left/right) servo
-  pan_servo:
-    # the pwm channel the servo is connected to
-    channel: 0
-
-    # min/max pulse width in microseconds (us)
-    # these values prevent the servo from trying to move past its physical limits
-    min_pulse_us: 500
-    max_pulse_us: 2500
-
-    # the neutral position pulse width
-    neutral_pulse_us: 1500
-
-  # parameters for the tilt (up/down) servo
-  tilt_servo:
-    channel: 1
-    min_pulse_us: 600
-    max_pulse_us: 2400
-    neutral_pulse_us: 1500
+      # parameters for the tilt (up/down) servo
+      tilt_servo:
+        channel: 1
+        min_pulse_us: 600
+        max_pulse_us: 2400
+        neutral_pulse_us: 1500
