@@ -54,9 +54,6 @@ DynamicCameraControlNode::DynamicCameraControlNode(
   x_pid_controller = control_toolbox::Pid(pan_p_, pan_i_, pan_d_, i_max_, i_min_, aw_);
   y_pid_controller = control_toolbox::Pid(tilt_p_, tilt_i_, tilt_d_, i_max_, i_min_, aw_);
 
-  x_pid_controller.initPid(pan_p_, pan_i_, pan_d_, i_max_, i_min_, aw_);
-  y_pid_controller.initPid(tilt_p_, tilt_i_, tilt_d_, i_max_, i_min_, aw_);
-
   prev_time = this->now(); // time when first called
 
   RCLCPP_INFO(this->get_logger(), "DynamicCameraControlNode initialized with PID gains - Pan: P=%.2f I=%.2f D=%.2f, Tilt: P=%.2f I=%.2f D=%.2f", 
