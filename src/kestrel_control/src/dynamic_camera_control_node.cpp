@@ -12,7 +12,7 @@ DynamicCameraControlNode::DynamicCameraControlNode(
     const rclcpp::NodeOptions &options)
     : rclcpp::Node("dynamic_camera_control_node", options) {
   sub_position = this->create_subscription<geometry_msgs::msg::PoseStamped>(
-      "odom", 5,
+      "odom", rclcpp::QoS(rclcpp::SensorDataQoS()),
       std::bind(&DynamicCameraControlNode::update_position_callback, this,
                 std::placeholders::_1));
 

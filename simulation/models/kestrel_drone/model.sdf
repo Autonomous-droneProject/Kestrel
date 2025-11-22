@@ -71,8 +71,8 @@
             <limit>
             <effort>1.4710000000000001</effort>
             <velocity>5.2359999999999998</velocity>
-            <lower>0</lower>
-            <upper>3.1415</upper>
+            <lower>-0.523599</lower>
+            <upper>0.523599</upper>
             </limit>
             <dynamics>
                 <spring_reference>0</spring_reference>
