@@ -51,8 +51,11 @@ DynamicCameraControlNode::DynamicCameraControlNode(
   i_max_ = this->get_parameter("camera_control_pid.i_max").as_double();
   aw_ = this->get_parameter("camera_control_pid.antiwindup").as_bool();
 
-  x_pid_controller = control_toolbox::Pid(pan_p_, pan_i_, pan_d_, i_max_, i_min_, aw_);
-  y_pid_controller = control_toolbox::Pid(tilt_p_, tilt_i_, tilt_d_, i_max_, i_min_, aw_);
+  x_pid_controller = control_toolbox::Pid(); // using default constructor
+  y_pid_controller = control_toolbox::Pid();
+
+  x_pid_controller.initPid(pan_p_, pan_i_, pan_d_, i_max_, i_min_, aw_);
+  y_pid_controller.initPid(tilt_p_, tilt_i_, tilt_d_, i_max_, i_min_, aw_);
 
   prev_time = this->now(); // time when first called
 
