@@ -96,6 +96,9 @@ void DynamicCameraControlNode::update_position_callback(
     RCLCPP_INFO(this->get_logger(), 
     "Errors: x=%.2f y=%.2f, dt=%.3f, PID out: x=%.2f y=%.2f", 
     x_err, y_err, dt_sec, x_angle, y_angle);
+     
+    x_angle = x_angle + 90.0;  // Center at 90 for forward position
+    y_angle = y_angle + 90.0; // Center at 90 for forward position
 
   /*
   double excess_x_angle = 0.0;
