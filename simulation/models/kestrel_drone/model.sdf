@@ -71,8 +71,8 @@
             <limit>
             <effort>1.4710000000000001</effort>
             <velocity>5.2359999999999998</velocity>
-            <lower>-0.523599</lower>
-            <upper>0.523599</upper>
+            <lower>-3.1415926</lower>
+            <upper>3.1415926</upper>
             </limit>
             <dynamics>
                 <spring_reference>0</spring_reference>
@@ -132,8 +132,8 @@
             <limit>
             <effort>1.571</effort>
             <velocity>5.236</velocity>
-            <lower>-1.5708</lower>
-            <upper>0</upper>
+            <lower>-3.1415926</lower>
+            <upper>3.1415926</upper>
             </limit>
             <dynamics>
             <spring_reference>0</spring_reference>
@@ -810,6 +810,47 @@
             <controlVelocitySlowdownSim>1</controlVelocitySlowdownSim>
         </control>
 
+        <!-- yaw range is -70 to +70 deg -->
+        <control channel="8">
+            <jointName>CameraPt1-joint</jointName>
+            <multiplier>-2.44346</multiplier>
+            <offset>-0.5</offset>
+            <servo_min>1100</servo_min>
+            <servo_max>1900</servo_max>
+            <type>COMMAND</type>
+            <cmd_topic>/camera/cmd_yaw</cmd_topic>
+            <p_gain>1.0</p_gain>
+        </control>
+
+        <!-- pitch range is -70 to +70 deg -->
+        <control channel="9">
+            <jointName>CameraPt2-joint</jointName>
+            <multiplier>-2.44346</multiplier>
+            <offset>-0.5</offset>
+            <servo_min>1100</servo_min>
+            <servo_max>1900</servo_max>
+            <type>COMMAND</type>
+            <cmd_topic>/camera/cmd_pitch</cmd_topic>
+            <p_gain>1.0</p_gain>
+        </control>
+
         </plugin>
+
+        <plugin
+        filename="gz-sim-joint-position-controller-system"
+        name="gz::sim::systems::JointPositionController">
+            <joint_name>CameraPt2-joint</joint_name>
+            <topic>/camera/cmd_pitch</topic>
+            <p_gain>1.0</p_gain>
+        </plugin>
+        <plugin
+        filename="gz-sim-joint-position-controller-system"
+        name="gz::sim::systems::JointPositionController">
+            <joint_name>CameraPt1-joint</joint_name>
+            <topic>/camera/cmd_yaw</topic>
+            <p_gain>1.0</p_gain>
+        </plugin>
+
+
     </model>
 </sdf>

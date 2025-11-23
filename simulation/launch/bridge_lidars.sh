@@ -34,5 +34,6 @@ ros2 run ros_gz_bridge parameter_bridge \
 /lidar/rear/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked \
 /lidar/right/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked \
 /lidar/up/points@sensor_msgs/msg/PointCloud2@gz.msgs.PointCloudPacked &
-ros2 run ros_gz_image image_bridge /camera/image_raw /camera/image_raw 
-
+ros2 run ros_gz_image image_bridge /camera/image_raw /camera/image_raw &
+ros2 run ros_gz_bridge parameter_bridge /camera/cmd_pitch@std_msgs/msg/Float64@gz.msgs.Double &
+ros2 run ros_gz_bridge parameter_bridge /camera/cmd_yaw@std_msgs/msg/Float64@gz.msgs.Double &
