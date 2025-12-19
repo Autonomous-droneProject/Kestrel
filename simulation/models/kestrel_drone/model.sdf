@@ -819,7 +819,7 @@
             <servo_max>1900</servo_max>
             <type>COMMAND</type>
             <cmd_topic>/camera/cmd_yaw</cmd_topic>
-            <p_gain>1.0</p_gain>
+            <p_gain>1</p_gain>
         </control>
 
         <!-- pitch range is -70 to +70 deg -->
@@ -831,7 +831,7 @@
             <servo_max>1900</servo_max>
             <type>COMMAND</type>
             <cmd_topic>/camera/cmd_pitch</cmd_topic>
-            <p_gain>1.0</p_gain>
+            <p_gain>1</p_gain>
         </control>
 
         </plugin>
