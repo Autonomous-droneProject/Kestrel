@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # ROS and system libraries
 import rclpy
 from rclpy.node import Node
@@ -16,7 +18,7 @@ from cv_bridge import CvBridge
 from ultralytics import YOLO
 
 
-from model import CNNdeepSORT
+from kestrel_vision.model import CNNdeepSORT
 from . import processing
 
 

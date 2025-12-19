@@ -165,3 +165,4 @@ Docker/tasks.json
 build_log.txt
 .vscode/
 .ignores/
+yolo11m.pt
