@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(kestrel_control)
 
-#
-#set(CMAKE_PREFIX_PATH "/opt/ros/${ROS_DISTRO}:${CMAKE_PREFIX_PATH}")
-
 # Core build dependencies
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_gtest REQUIRED)
@@ -12,16 +9,10 @@ find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(kestrel_msgs REQUIRED)
-
+find_package(control_toolbox REQUIRED)
+find_package(mavros_msgs REQUIRED)
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};/usr/share/cmake/geographiclib")
 find_package(GeographicLib REQUIRED)
-
-set(control_toolbox_DIR "${ROS_PREFIX}/share/control_toolbox/cmake") 
-find_package(control_toolbox REQUIRED)
-
-
-set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};/usr/share/cmake/mavros_msgs")
-find_package(mavros_msgs REQUIRED)
 
 # Include directory for headers
 include_directories(include)

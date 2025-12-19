@@ -13,17 +13,18 @@ find_package(diagnostic_msgs REQUIRED)
 #find_package(vision_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/EmbeddedDetection2D.msg"
-  "msg/EmbeddedDetection2DArray.msg"
+  "msg/Detection.msg"
+  "msg/DetectionArray.msg"
+  "msg/Track.msg"
+  "msg/TrackArray.msg"
   "msg/CameraCommand.msg"
   "msg/FlightStatus.msg"
-  "msg/ObjectTrack.msg"
   "msg/ObstacleGrid.msg"
   "msg/ProximityAlert.msg"
   "msg/SensorArray.msg"
   "msg/SensorReading.msg"
   "msg/SystemHealth.msg"
-  "msg/TrackCentroid.msg"
+  "msg/TrackCenter.msg"
   "srv/CalibrateCamera.srv"
   "srv/GetSystemStatus.srv"
   "srv/ResetSensors.srv"

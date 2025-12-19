@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'kestrel_clustering'
+package_name = 'kestrel_input'
 
 setup(
     name=package_name,
@@ -20,7 +20,6 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'clustering_node = kestrel_clustering.clustering_node:main',
         ],
     },
 )

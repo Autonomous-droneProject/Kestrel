@@ -1,14 +1,8 @@
 # Process for building and pushing the full Jetson Orin Nano docker image
 
-name: Docker Build and Push - Prod
+name: Docker Build Base image
 
 on:
-  pull_request:
-    branches:
-      - master
-    types:
-      - opened
-      - synchronize
   workflow_dispatch:
 
 jobs:
