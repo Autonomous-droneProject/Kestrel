@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
 from filterpy.kalman import KalmanFilter as FP_KalmanFilter
-from cv_bridge import CVBridge
+from cv_bridge import CvBridge
 from kestrel_msgs.msg import DetectionArray, Track as TrackMsg, TrackArray
 from ultralytics import YOLO
 import numpy as np
@@ -246,7 +246,7 @@ class TrackManager:
 class TrackingNode(Node):
     def __init__(self):
             super().__init__('tracking_node')
-            self.bridge = CVBridge()
+            self.bridge = CvBridge()
             self.yolo = YOLO('yolov8n.pt')
             #initiate track manager
             self.track_manager = TrackManager(
@@ -279,8 +279,7 @@ class TrackingNode(Node):
             
         # 2. Gate & associate (week-2) (Extract bboxes)
         # Cost matrix comparing all tracks to all detections
-        cost_matrix = build_cost_matrix(self.track_manager.tracks, detection_bboxes, 
-                                        self.track_manager.w_motion, self.track_manager.w_app)
+        cost_matrix = build_cost_matrix(self.track_manager.tracks, detection_bboxes, self.track_manager.w_motion, self.track_manager.w_app)
         # Apply gating - high cost for invalid assignments
         if len(self.track_manager.tracks) > 0 and len(detection_bboxes) > 0:
             for i, track in enumerate(self.track_manager.tracks):
