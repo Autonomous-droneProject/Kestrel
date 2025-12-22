@@ -16,6 +16,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/CameraCommand.msg"
   "msg/FlightStatus.msg"
   "msg/Track.msg"
+  "msg/Detection.msg"
+  "msg/DetectionArray.msg"
   "msg/TrackCenter.msg"
   "msg/ObstacleGrid.msg"
   "msg/ProximityAlert.msg"
