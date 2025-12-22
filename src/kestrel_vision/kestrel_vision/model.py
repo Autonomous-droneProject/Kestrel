@@ -37,6 +37,6 @@ class CNNdeepSORT(nn.Module):
         output = self.convolution(inputTensor)  # CNN encoder block -> [B, emb_dim, 1, 1]
         output = torch.flatten(output,1)        # [B, emb_dim] -> person's appearance vector 
         
-        output = self.classifier(output)   # For use as classifier -> [B, num_classes]
+        #output = self.classifier(output)   # For use as classifier -> [B, num_classes]
         # else: For use as feature extractor        
         return output

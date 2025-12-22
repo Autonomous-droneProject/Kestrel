@@ -284,14 +284,13 @@ class InputNode(Node):
         arr.tracks = whitelisted
         self.pub_input.publish(arr)
 
-'''
+
 def main(args=None):
     rclpy.init(args=args)
-    node = TrackingNode()
+    node = InputNode()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
-'''
