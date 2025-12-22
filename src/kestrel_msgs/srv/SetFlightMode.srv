@@ -1,9 +1,4 @@
-# Service to switch the drones flight mode
-
-# Request
-# ThIS uses the flight mode constants defined in kestrel_msgs/FlightStatus
-uint8 flight_mode
+# Empty request
 ---
-# Response
-bool success
-string message # ex... "Flight mode set to AUTO" or "Failed: Transition to AUTO not possible in current state"
+
+# Empty response

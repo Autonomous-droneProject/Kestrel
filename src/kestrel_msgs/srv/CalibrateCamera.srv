@@ -1,13 +1,4 @@
-# Service to trigger a camera calibration routine
-
-# Request
-# Calibration mode constants
-uint8 CALIBRATE_INTRINSIC = 0
-uint8 CALIBRATE_EXTRINSIC = 1
-uint8 CALIBRATE_WHITE_BALANCE = 2
-
-uint8 calibration_mode
+# Empty request
 ---
-# Response
-bool success
-string message # Provides details on success or failure (like "Calibration complete" or "FAILED: Camera not found")
+
+# Empty response

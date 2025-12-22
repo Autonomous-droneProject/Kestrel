@@ -17,7 +17,6 @@ setup(
     maintainer_email='da364739@ucf.edu',
     description='Vision node for Kestrel drone using YOLO and DeepSORT',
     license='MIT',
-    tests_require=['pytest'],
     entry_points={
         'console_scripts': [
             'vision_node = kestrel_vision.vision_node:main',

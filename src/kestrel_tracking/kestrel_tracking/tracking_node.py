@@ -14,11 +14,11 @@ from scipy.stats import chi2
 import cv2 
 import json 
 
-#Extracts bounding box from a vision_msgs/Detection2D message
+#Extracts bounding box from a vision_msgs/Detection message
 #This function converts the center and size of the bounding box into the format [x1, y1, x2, y2]
 #where (x1, y1) is the top-left corner and (x2, y2) is the bottom-right corner.
 def det2bbox(det): 
-    """Extract [x1,y1,x2,y2] from a kestrel_msgs/msg/Detection."""
+    """Extract [x1,y1,x2,y2] from a kestrel_msgs/msg/EmbeddedDetection2D."""
     # extract and return the center directly from th vision msgs
     return [int(det.x1), int(det.y1), int(det.x2), int(det.y2)] 
 
