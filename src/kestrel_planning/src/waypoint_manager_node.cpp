@@ -135,6 +135,7 @@ bool WayPointManagerNode::hasReachedGoal() const
 }
 
 
+#ifndef EXCLUDE_MAIN
 int main(int argc, char * argv[])
 {
     rclcpp::init(argc, argv);
@@ -143,3 +144,4 @@ int main(int argc, char * argv[])
     rclcpp::shutdown();
     return 0;
 }
+#endif
