@@ -29,11 +29,11 @@ class VisionNode(Node):
         super().__init__('vision_node')
 
        # initialize models
-        yolo_path = Path(__file__).parent/'yolo11m.pt'
+        yolo_path = Path(__file__).parent/'yolov8n.pt'
         self.yolo_model = YOLO(yolo_path)
-        self.yolo_model.to('cpu')
+        self.yolo_model.to('cpu') #TODO: why CPU?
 
-        # ---- CNN init (safe, order-correct, tolerant to checkpoint shapes) ----
+        # ---- CNN init  ----
         self.cnn_model = CNNdeepSORT(embedding_dim=128)
 
         checkpoint_path = Path(__file__).parent / 'best_model_checkpoint.pth'

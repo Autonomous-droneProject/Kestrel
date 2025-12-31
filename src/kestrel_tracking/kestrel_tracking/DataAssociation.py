@@ -287,7 +287,7 @@ class DataAssociation:
     
 
     #Element-wise Weighted Mean of Every Cost Matrix Value (𝑊𝑀(𝐷,𝑃))
-    def weighted_mean_cost_matrix(self, detections, tracks, image_dims, lambda_iou=0.33, lambda_de=0.33, lambda_r=0.34):
+    def weighted_mean_cost_matrix(self, detections, tracks, image_dims, lambda_iou=7/10, lambda_de=2/10, lambda_r=1/10):
         """
         Computes the element-wise weighted mean of every cost matrix value:
 
