@@ -17,7 +17,6 @@ setup(
     maintainer_email='davidorjuela@todo.todo',
     description='TODO: Package description',
     license='TODO: License declaration',
-    tests_require=['pytest'],
     entry_points={
         'console_scripts': [
             'whitelistTracks = kestrel_input.whitelistTracks:main',
