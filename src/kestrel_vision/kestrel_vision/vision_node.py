@@ -3,7 +3,6 @@
 # ROS and system libraries
 import rclpy
 from rclpy.node import Node
-import sys
 from pathlib import Path
 
 # ROS messages
@@ -29,16 +28,22 @@ class VisionNode(Node):
     """
     def __init__(self):
         super().__init__('vision_node')
+        
+        # initialize models
+        default_model_path = Path(__file__).resolve().parents[3] / 'models' / 'yolov8n.pt'
+        
+        model_path = self.declare_parameter(
+            'yolo_model_path',
+            str(default_model_path)
+        ).value
 
-       # initialize models
-        yolo_path = Path(__file__).parent/'yolo11m.pt'
-        self.yolo_model = YOLO(yolo_path)
-        self.yolo_model.to('cpu')
+        self.yolo_model = YOLO(model_path)
+        self.yolo_model.to('cpu') #TODO: why CPU?
 
-        # ---- CNN init (safe, order-correct, tolerant to checkpoint shapes) ----
+        # ---- CNN init  ----
         self.cnn_model = CNNdeepSORT(embedding_dim=128)
 
-        checkpoint_path = Path(__file__).parent / 'best_model_checkpoint.pth'
+        checkpoint_path = Path(__file__).resolve().parents[3] / 'models' / 'best_model_checkpoint.pth'
         if checkpoint_path.is_file():
             try:
                 # torch.load with weights_only when available (2.1+), else fallback
@@ -92,9 +97,8 @@ class VisionNode(Node):
 
         self.cnn_model.eval()
         self.cnn_model.to('cpu')   # or to('cuda') later via a device param
+
         # -----------------------------------------------------------------------
-
-
 
         self.bridge = CvBridge()
         # threshold to stop certain stuff to go into cnn

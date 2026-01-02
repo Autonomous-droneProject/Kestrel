@@ -5,58 +5,78 @@ from numpy.typing import NDArray
 
 class DataAssociation:
     """
-    For all parameters:
-    detections : List[List[float]] or List[np.ndarray]  
-         A list of bounding boxes representing current detections, each in the format [x, y, w, h].
-    tracks : List[List[float]] or List[np.ndarray]
-        A list of bounding boxes representing predicted tracks, each in the format [x, y, w, h].
+    All bbox arrays are expected in format:
+        [cx, cy, w, h]  (center coordinates + width/height)
+
+    All cost matrices returned are shape:
+        (T, D) = (num_tracks, num_detections)
+
+    Convention:
+        - Lower cost is better
+        - Costs are clipped/bounded into [0, 1] for the included costs
     """
+
+
+    @staticmethod
+    def _cxcywh_to_xyxy(boxes: NDArray[np.float_]) -> tuple[NDArray[np.float_], NDArray[np.float_], NDArray[np.float_], NDArray[np.float_]]:
+        """
+        Convert boxes (N,4) in cxcywh into x1,y1,x2,y2 (each (N,1) or (1,N) depending on reshape).
+        """
+        boxes = np.asarray(boxes, dtype=np.float32)
+        cx = boxes[:, 0]
+        cy = boxes[:, 1]
+        w  = boxes[:, 2]
+        h  = boxes[:, 3]
+
+        x1 = cx - w / 2.0
+        y1 = cy - h / 2.0
+        x2 = cx + w / 2.0
+        y2 = cy + h / 2.0
+        return x1, y1, x2, y2
     
     #Euclidean Distance Based Cost Matrix (𝐷𝐸(𝐷,𝑃))
     def euclidean_cost(
         self,
-        detections: NDArray[np.float_],
-        tracks: NDArray[np.float_],
-        image_dims: tuple[int, int]
+        tracks: NDArray[np.float_],        # (T,4) cxcywh
+        detections: NDArray[np.float_],    # (D,4) cxcywh
+        image_dims: tuple[int, int],
     ) -> NDArray[np.float_]:
         """
-        Computes the Euclidean distance cost matrix (𝐷𝐸(𝐷,𝑃)), which represents
-        the distance between bounding box central points normalized into half
-        of the image dimension. To formulate the problem as a maximization
-        problem, the distance is obtained by the difference between 1 and the
-        normalized Euclidean distance.
+        Euclidean distance between centers normalized by half the image diagonal.
+        Returns (T, D) in [0, 1] where 0 is best (same center), 1 is worst (far).
 
         d(Di, Pi) = 1 - [sqrt((u_Di - u_Pi)^2 + (v_Di - v_Pi)^2) / (1/2) * sqrt(h^2 + w^2)]
 
         where (h, w) are the height and width of the input image.
         """
-        #Retrieve lengths
-        detections = np.array(detections)
-        tracks = np.array(tracks)
+        tracks = np.asarray(tracks, dtype=np.float32)
+        detections = np.asarray(detections, dtype=np.float32)
 
-        #Store bounding boxes centers for computation
-        detections_pos = detections[:, 0:2] + detections[:, 2:4] / 2.0  # (D, 2) - Center of each detection
-        tracks_pos = tracks[:, 0:2] + tracks[:, 2:4] / 2.0  # (T, 2) - Center of each track
+        if tracks.size == 0 or detections.size == 0:
+            return np.zeros((tracks.shape[0], detections.shape[0]), dtype=np.float32)
 
-        #Calculate norm based off image size
-        norm = 0.5 * np.sqrt(image_dims[0]**2 + image_dims[1]**2)
+        # Centers are already (cx, cy)
+        trk_pos = tracks[:, 0:2]        # (T,2)
+        det_pos = detections[:, 0:2]    # (D,2)
 
-        #Subtract so u_Di - u_Pi & v_Di - v_Pi
-        delta = detections_pos[:, None, :] - tracks_pos[None, :, :]
+        # Normalization constant: half the image diagonal
+        H, W = image_dims
+        norm = 0.5 * np.sqrt(float(H) ** 2 + float(W) ** 2)
 
-        #Perform linear norm of sum of deltas
-        dist_matrix = np.linalg.norm(delta, axis=2)  
+        # Broadcast subtract:
+        #   trk_pos[:, None, :] -> (T,1,2)
+        #   det_pos[None, :, :] -> (1,D,2)
+        delta = trk_pos[:, None, :] - det_pos[None, :, :]   # (T,D,2)
+        dist = np.linalg.norm(delta, axis=2)                # (T,D)
 
-        #Compute cost matrix
-        euclidean_cost_matrix = np.clip((dist_matrix / norm), 0.0, 1.0) # Ensures all values are bounded between 0 and 1.
-
-        return euclidean_cost_matrix
+        cost = np.clip(dist / (norm + 1e-12), 0.0, 1.0).astype(np.float32)  # (T,D)
+        return cost
 
     #Bounding Box Ratio Based Cost Matrix (𝑅(𝐷,𝑃))
     def bbox_ratio_cost(
         self,
-        detections: NDArray[np.float_],
-        tracks: NDArray[np.float_]
+        tracks: NDArray[np.float_],        # (T,4) cxcywh
+        detections: NDArray[np.float_],    # (D,4) cxcywh
     ) -> NDArray[np.float_]:
 
         """
@@ -65,99 +85,93 @@ class DataAssociation:
 
         r(Di, Pi) = min( (w_Di * h_Di) / (w_Pi * h_Pi), (w_Pi * h_Pi) / (w_Di * h_Di) )
 
-        Returns a cost matrix where lower values indicate better box shape alignment.
+        cost = 1 - min(area_det/area_trk, area_trk/area_det)
 
-        Box shape similarity ranges from 0 (different) to 1 (identical), and is converted to cost as:
-        cost_r = 1.0 - similarity_r.     
-
-        Note: This implementation matches the paper definition, which compares area ratios only.
-        This may return cost = 0 even for mismatched shapes (e.g., 10x1 vs 1x10), since area = same.
-
+        Note: this is area-only, so shapes like 10x1 and 1x10 have same area.
         """ 
-        if len(detections) == 0 or len(tracks) == 0:
-            return np.array([])
+        tracks = np.asarray(tracks, dtype=np.float32)
+        detections = np.asarray(detections, dtype=np.float32)
 
-        detections = np.array(detections) # (D, 4)
-        tracks = np.array(tracks) # (T, 4)
+        T = tracks.shape[0]
+        D = detections.shape[0]
+        if T == 0 or D == 0:
+            return np.zeros((T, D), dtype=np.float32)
 
-        # Gets every width and height from each row into 2 1D arrays and calculates area
-        detection_areas = detections[:, 2] * detections[:, 3]
-        track_areas = tracks[:, 2] * tracks[:, 3] # (T,) = (T,) * (T,)
+        trk_areas = tracks[:, 2] * tracks[:, 3]        # (T,)
+        det_areas = detections[:, 2] * detections[:, 3]  # (D,)
 
-        # Transform the 1D arrays to broadcast into (D, T)
-        detection_areas = detection_areas[:, None]# (D, 1): [[1], [2], [3]] 
-        track_areas = track_areas[None, :] #        (1, T): [[1, 2, 3, 4]]
-
-        # Prevent divide-by-zero
         eps = 1e-6
-        detection_areas = np.maximum(detection_areas, eps)
-        track_areas = np.maximum(track_areas, eps)
-        
-        if np.any(detection_areas == eps) or np.any(track_areas == eps):
-            print("[Warning] Zero-area bounding box encountered. Auto-corrected to epsilon.")
+        trk_areas = np.maximum(trk_areas, eps)
+        det_areas = np.maximum(det_areas, eps)
 
-        # Calculates ratio and broadcasts to (D, T)
-        ratio1 = detection_areas / track_areas
-        ratio2 = track_areas / detection_areas
-        
-        # Calculates cost at every [i, j]
-        bbox_cost_matrix = 1.0 - np.minimum(ratio1, ratio2)
-        return bbox_cost_matrix
+        # Broadcast to (T,D)
+        # trk_areas[:,None] => (T,1)
+        # det_areas[None,:] => (1,D)
+        ratio1 = det_areas[None, :] / trk_areas[:, None]   # (T,D)  det/trk
+        ratio2 = trk_areas[:, None] / det_areas[None, :]   # (T,D)  trk/det
+
+        cost = 1.0 - np.minimum(ratio1, ratio2)
+        cost = np.clip(cost, 0.0, 1.0).astype(np.float32)
+        return cost
 
       
-    #SORT’s IoU Cost Matrix
+    # SORT's IoU Cost
     def iou_cost(
         self,
-        detections: NDArray[np.float_],
-        tracks: NDArray[np.float_]
+        tracks: NDArray[np.float_],        # (T,4) cxcywh
+        detections: NDArray[np.float_],    # (D,4) cxcywh
     ) -> NDArray[np.float_]:
-      
-        detections = np.array(detections)
-        tracks = np.array(tracks)
+        """
+        IoU cost = 1 - IoU, returned as (T, D).
+        """
+        tracks = np.asarray(tracks, dtype=np.float32)
+        detections = np.asarray(detections, dtype=np.float32)
 
-        det_x1 = detections[:, 0:1]
-        det_y1 = detections[:, 1:2]
-        det_x2 = det_x1 + detections[:, 2:3]
-        det_y2 = det_y1 + detections[:, 3:4]
+        T = tracks.shape[0]
+        D = detections.shape[0]
+        if T == 0 or D == 0:
+            return np.zeros((T, D), dtype=np.float32)
 
-        trk_x1 = tracks[:, 0].reshape(1,-1)
-        trk_y1 = tracks[:, 1].reshape(1,-1)
-        trk_x2 = trk_x1 + tracks[:, 2].reshape(1,-1)
-        trk_y2 = trk_y1 + tracks[:, 3].reshape(1,-1)
+        # Convert both to xyxy
+        trk_x1, trk_y1, trk_x2, trk_y2 = self._cxcywh_to_xyxy(tracks)      # each (T,)
+        det_x1, det_y1, det_x2, det_y2 = self._cxcywh_to_xyxy(detections)  # each (D,)
 
-        detectionWidth = detections[:,2:3]
-        detectionHeight = detections[:,3:4]
+        # Reshape for broadcasting:
+        # Tracks along rows (T,1), detections along cols (1,D)
+        trk_x1 = trk_x1[:, None]
+        trk_y1 = trk_y1[:, None]
+        trk_x2 = trk_x2[:, None]
+        trk_y2 = trk_y2[:, None]
 
-        areaDetection = detectionWidth * detectionHeight
-        areaTrack = tracks[:, 2].reshape(1, -1) * tracks[:, 3].reshape(1, -1)
+        det_x1 = det_x1[None, :]
+        det_y1 = det_y1[None, :]
+        det_x2 = det_x2[None, :]
+        det_y2 = det_y2[None, :]
 
-        inter_x1 = np.maximum(det_x1, trk_x1)
-        inter_y1 = np.maximum(det_y1, trk_y1)
-        inter_x2 = np.minimum(det_x2, trk_x2)
-        inter_y2 = np.minimum(det_y2, trk_y2)
+        inter_x1 = np.maximum(trk_x1, det_x1)
+        inter_y1 = np.maximum(trk_y1, det_y1)
+        inter_x2 = np.minimum(trk_x2, det_x2)
+        inter_y2 = np.minimum(trk_y2, det_y2)
 
         inter_w = np.maximum(0.0, inter_x2 - inter_x1)
         inter_h = np.maximum(0.0, inter_y2 - inter_y1)
+        inter_area = inter_w * inter_h  # (T,D)
 
-        # AoI = Area of Intersection, AoU = Area of Union
-        AoI = inter_w * inter_h
-        AoU = areaDetection + areaTrack - AoI
+        trk_area = np.maximum(0.0, (trk_x2 - trk_x1)) * np.maximum(0.0, (trk_y2 - trk_y1))  # (T,1)
+        det_area = np.maximum(0.0, (det_x2 - det_x1)) * np.maximum(0.0, (det_y2 - det_y1))  # (1,D)
 
-        
-        # Explicitly Guard Against Divide-by-Zero
-        with np.errstate(divide='ignore', invalid='ignore'):
-            iou_raw = np.divide(AoI, AoU, out=np.zeros_like(AoI), where=AoU > 0)
-        if np.any(AoU == 0):
-            print("[Warning] Divide by zero encountered in IoU computation.") # Consider removal when production ready!
-        
-        # Convert NaN to 0 before computing cost
-        iou_raw = np.nan_to_num(iou_raw, nan=0.0, posinf=0.0, neginf=0.0)
+        union = trk_area + det_area - inter_area  # (T,D)
 
-        iou_matrix = np.clip(iou_raw, 0.0, 1.0)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            iou = np.divide(inter_area, union, out=np.zeros_like(inter_area), where=union > 0)
 
-        return 1.0 - iou_matrix
+        iou = np.nan_to_num(iou, nan=0.0, posinf=0.0, neginf=0.0)
+        iou = np.clip(iou, 0.0, 1.0).astype(np.float32)
 
-    #SORT’s IoU Cost Matrix Combined with the Euclidean Distance Cost Matrix (𝐸𝐼𝑜𝑈𝐷(𝐷,𝑃))
+        cost = (1.0 - iou).astype(np.float32)  # (T,D)
+        return cost
+
+    #SORT's IoU Cost Matrix Combined with the Euclidean Distance Cost Matrix (𝐸𝐼𝑜𝑈𝐷(𝐷,𝑃))
     def iou_euclidean_cost(self, detections, tracks, image_dims):
         """
         Computes the IoU cost matrix combined with the Euclidean distance cost
@@ -287,49 +301,41 @@ class DataAssociation:
     
 
     #Element-wise Weighted Mean of Every Cost Matrix Value (𝑊𝑀(𝐷,𝑃))
-    def weighted_mean_cost_matrix(self, detections, tracks, image_dims, lambda_iou=0.33, lambda_de=0.33, lambda_r=0.34):
+    def weighted_mean_cost_matrix(
+        self,
+        tracks: NDArray[np.float_],        # (T,4) cxcywh
+        detections: NDArray[np.float_],    # (D,4) cxcywh
+        image_dims: tuple[int, int],
+        lambda_iou: float = 7 / 10,
+        lambda_de: float = 2 / 10,
+        lambda_r: float = 1 / 10,
+    ) -> NDArray[np.float_]:
         """
-        Computes the element-wise weighted mean of every cost matrix value:
-
-        WM(Di, Pi) = (λ_IoU * IoU(Di, Pi) + λ_DE * DE(Di, Pi) + λ_R * R(Di, Pi))
-
-        where λ_IoU + λ_DE + λ_R = 1.
+        WM = lambda_iou * IoU_cost + lambda_de * Euclidean_cost + lambda_r * Ratio_cost
+        Returns (T, D).
         """
-        '''
-        It calculates a combined cost based on the Intersection over Union (IoU), 
-        Euclidean distance, and bounding box ratio metrics, using specified weights.
-        '''
-        num_detections = len(detections)
-        num_tracks = len(tracks)
-        
-        if num_detections == 0 or num_tracks == 0:
-            return np.array([]) #Return an empty array if there are no tracks or detections
+        tracks = np.asarray(tracks, dtype=np.float32)
+        detections = np.asarray(detections, dtype=np.float32)
 
-        cost_matrix = np.zeros((num_detections, num_tracks))
+        T = tracks.shape[0]
+        D = detections.shape[0]
+        if T == 0 or D == 0:
+            return np.zeros((T, D), dtype=np.float32)
 
-        #Ensure the weights sum to 1.0
-        sum_lambdas = lambda_iou + lambda_de + lambda_r
-        if not np.isclose(sum_lambdas, 1.0):
-            print("Warning: Lambda weights do not sum to 1.0. I will normalize them.")
-            lambda_iou /= sum_lambdas
-            lambda_de /= sum_lambdas
-            lambda_r /= sum_lambdas
+        # Ensure weights sum to 1.0
+        s = float(lambda_iou + lambda_de + lambda_r)
+        if not np.isclose(s, 1.0):
+            lambda_iou /= s
+            lambda_de  /= s
+            lambda_r   /= s
 
-        #Compute the cost matrices using other cost functions. All other functions SHOULD return cost matrices, if not change to: 1.0 - output_matrix
-        cost_iou = self.iou_cost(detections, tracks) 
-        cost_euclidean = self.euclidean_cost(detections, tracks, image_dims)
-        cost_ratio = self.bbox_ratio_cost(detections, tracks)
+        cost_iou = self.iou_cost(tracks, detections)                    # (T,D)
+        cost_de  = self.euclidean_cost(tracks, detections, image_dims)  # (T,D)
+        cost_r   = self.bbox_ratio_cost(tracks, detections)             # (T,D)
 
-        #Vectorized weight sum. NumPy arrays are implemented in C under the hood.
-        #So with these arrays, math operations are executed in compiled C code, not interpreted Python
-        #Rather than iterating through with nested loops, we can perform vector/matrix multiplication on the arrays as a whole
-        cost_matrix = (
-            lambda_iou * cost_iou +
-            lambda_de * cost_euclidean +
-            lambda_r * cost_ratio
-        )
-        
-        return cost_matrix
+        wm = (lambda_iou * cost_iou) + (lambda_de * cost_de) + (lambda_r * cost_r)
+        wm = np.clip(wm, 0.0, 1.0).astype(np.float32)
+        return wm
 
       
     #Class Gate Update Based on Object Class Match (𝐶∗(𝐷,𝑃))
@@ -361,3 +367,31 @@ class DataAssociation:
         gated_cost_matrix = cost_matrix * match_mask
         
         return gated_cost_matrix
+    
+
+_DA = DataAssociation()
+
+def weighted_mean_cost_matrix(
+    tracks: NDArray[np.float_],
+    detections: NDArray[np.float_],
+    image_dims: tuple[int, int],
+    lambda_iou: float = 7 / 10,
+    lambda_de: float = 2 / 10,
+    lambda_r: float = 1 / 10,
+) -> NDArray[np.float_]:
+    """
+    Pure NumPy in/out helper.
+    Expects:
+      tracks: (T,4) cxcywh
+      detections: (D,4) cxcywh
+    Returns:
+      (T,D) cost matrix
+    """
+    return _DA.weighted_mean_cost_matrix(
+        tracks=tracks,
+        detections=detections,
+        image_dims=image_dims,
+        lambda_iou=lambda_iou,
+        lambda_de=lambda_de,
+        lambda_r=lambda_r,
+    )

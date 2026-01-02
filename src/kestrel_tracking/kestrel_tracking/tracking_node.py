@@ -1,350 +1,556 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import Image
-from filterpy.kalman import KalmanFilter as FP_KalmanFilter
-from cv_bridge import CvBridge
+
 from kestrel_msgs.msg import DetectionArray, Track as TrackMsg, TrackArray
-from ultralytics import YOLO
+from kestrel_tracking.DataAssociation import weighted_mean_cost_matrix
+
 import numpy as np
+from dataclasses import dataclass
+from typing import List, Sequence, Tuple
 from scipy.optimize import linear_sum_assignment
-from typing import List, Tuple, Sequence
-from numpy.linalg import inv
-from scipy.stats import chi2
-import cv2 
-import json 
 
-#Extracts bounding box from a vision_msgs/Detection message
-#This function converts the center and size of the bounding box into the format [x1, y1, x2, y2]
-#where (x1, y1) is the top-left corner and (x2, y2) is the bottom-right corner.
-def det2bbox(det): 
-    """Extract [x1,y1,x2,y2] from a kestrel_msgs/msg/EmbeddedDetection2D."""
-    # extract and return the center directly from th vision msgs
-    return [int(det.x1), int(det.y1), int(det.x2), int(det.y2)] 
+from filterpy.kalman import KalmanFilter as FP_KalmanFilter
 
-def bbox2state(bbox):
-    """Convert bbox → Kalman state vector. Convert [x1,y1,x2,y2] → [cx, cy, w, h] """
-    x1, y1, x2, y2 = bbox
-    w, h = x2 - x1, y2 - y1
-    cx = x1 + w / 2
-    cy = y1 + h / 2
-    return np.array([cx, cy, w, h])
-def state2bbox(state: Sequence[float])-> List[int]:
+
+# -----------------------------
+# Detection struct + adapters
+# -----------------------------
+@dataclass(frozen=True)
+class Det:
+    """One detection in convenient tracker format."""
+    x1: float
+    y1: float
+    x2: float
+    y2: float
+    z: np.ndarray          # (4,1) measurement: [cx, cy, w, h]^T
+    embedding: np.ndarray  # (128,) appearance embedding
+    conf: float = 0.0
+    class_name: str = ""
+
+def det_from_ros(det_msg) -> Det:
+    """Convert kestrel_msgs/Detection -> Det."""
+    z = np.array(
+        [det_msg.center_x, det_msg.center_y, det_msg.w, det_msg.h], 
+        dtype=np.float32
+    ).reshape(4,1)
+    
+    emb = np.array(det_msg.embedding, dtype=np.float32)
+    
+    return Det(
+        x1=float(det_msg.x1), 
+        y1=float(det_msg.y1), 
+        x2=float(det_msg.x2), 
+        y2=float(det_msg.y2), 
+        z=z, 
+        embedding=emb,
+        conf=float(det_msg.conf), 
+        class_name=str(det_msg.class_name),
+    )
+
+
+# -----------------------------
+# Geometry helpers
+# -----------------------------
+def state2bbox_xyxy(state: Sequence[float]) -> List[float]:
     """
-    Convert a Kalman state vector → [x1, y1, x2, y2].
-    Expects state[:4] = [cx, cy, w, h].
+    Convert a KF state -> bbox [x1, y1, x2, y2] using state[:4] = [cx, cy, w, h].
+    Keep as floats; cast to int only for drawing.
     """
     cx, cy, w, h = state[:4]
-    x1 = cx - w / 2
-    y1 = cy - h / 2
-    x2 = cx + w / 2
-    y2 = cy + h / 2
-    return [int(x1), int(y1), int(x2), int(y2)]
+    x1 = cx - w / 2.0
+    y1 = cy - h / 2.0
+    x2 = cx + w / 2.0
+    y2 = cy + h / 2.0
+    return [float(x1), float(y1), float(x2), float(y2)]
 
-def mahalanobis_gate(kalmanFilter, det_bbox, innovation_covariance, thresh):
-    """Return True if Mahalanobis distance < thresh."""
-    #Replaced track_State with kalmanFilter
-    #What we are passing as covariance will be the innovation covariance which is S (S = H*P*H^T + R), should be calculate in measurement matrix, if not will need to do here
 
-    # I can just implement it in here *so its subject to change but for now ima add it as a parameter, same thing with S I think it should be calculated in measurement matrix
+# -----------------------------
+# Costs + gating (vectorized)
+# -----------------------------
+def mahalanobis_gate_mask(
+    tracks: List["Track"],
+    det_z: np.ndarray,
+    gate_d2_thresh: float
+) -> np.ndarray:
+    """
+    Build a (T,D) boolean mask where True means the pairing is allowed by gating.
 
-    #Convert raw bbox into z (actual measurement)
-    z = bbox2state(det_bbox).reshape(4,1)
+    Implementation detail:
+      - We loop over tracks (T loops)
+      - We vectorize over detections per-track (no T*D Python loops)
 
-    H = kalmanFilter.H
-    x = kalmanFilter.x
+    Args:
+      tracks: list of Track objects
+      det_z: (D,4) array of detection measurements in cxcywh
+      gate_d2_thresh: squared Mahalanobis threshold
 
-    z_hat = H @ x 
-    y = z - z_hat
+    Returns:
+      mask: (T,D) boolean array
+    """
+    T = len(tracks)
+    D = det_z.shape[0]
+    mask = np.zeros((T, D), dtype=bool)
+
+    if T == 0 or D == 0:
+        return mask
+
+    # Ensure det_z is float32 for speed/consistency
+    det_z = np.asarray(det_z, dtype=np.float32)
+
+    # Precompute det_z as (4,D) once, so each track can reuse it cheaply
+    # det_z_T has columns = detections
+    det_z_T = det_z.T  # (4,D)
+
+    for i, trk in enumerate(tracks):
+        kf = trk.kf
+
+        # Innovation covariance S = HPH^T + R (4x4)
+        H = kf.H.astype(np.float32)
+        P = kf.P.astype(np.float32)
+        R = kf.R.astype(np.float32)
+        S = H @ P @ H.T + R  # (4,4)
+
+        # Predicted measurement Hx (4,1)
+        Hx = (H @ kf.x).astype(np.float32)  # (4,1)
+
+        # Innovations for all detections at once:
+        # y = z - Hx, but z is (4,D) and Hx is (4,1) so broadcast works
+        y = det_z_T - Hx  # (4,D)
+
+        # Solve S^{-1} y for all columns at once (4,D)
+        # This avoids explicitly computing inv(S)
+        try:
+            tmp = np.linalg.solve(S, y)  # (4,D)
+        except np.linalg.LinAlgError:
+            # If S becomes singular for any reason, fail-safe: gate nothing for this track
+            continue
+
+        # d2 per detection = y^T * S^{-1} * y
+        # Since y and tmp are (4,D), columnwise dot is sum(y * tmp) over rows
+        d2 = np.sum(y * tmp, axis=0)  # (D,)
+
+        mask[i, :] = (d2 <= gate_d2_thresh)
+
+    return mask
+
+
+def mahalanobis_distance_squared(kf: FP_KalmanFilter, z: np.ndarray) -> float:
+    """
+    Compute squared Mahalanobis distance:
+      d^2 = (z - Hx)^T S^{-1} (z - Hx),
+    where S = HPH^T + R.
+    """
+    H = kf.H
+    x = kf.x
+    y = z - (H @ x)             # innovation
+    S = H @ kf.P @ H.T + kf.R   # innovation covariance
     
-    # S*x = y is the same thing as the inverse of S (S is the innovation covariance and we neeed the inverse)
-    temp = np.linalg.solve(innovation_covariance, y)
-    
-    #Due to gating taking the squared Mahalanobis Distance is considered better and standard practice then using the normal Distance
-    distance_squared = y.t @ temp
+    # Solve S^{-1} y without explicitly inverting S
+    tmp = np.linalg.solve(S, y)
+    d2 = float((y.T @ tmp).item())
+    return d2
 
 
-    return distance_squared < thresh
-
-def appearance_cost(track, det_feature):
-    # cosine distance = 1 - cosine similarity
-    if track.feature is None:
+def appearance_cost(track_feature: np.ndarray, det_feature: np.ndarray) -> float:
+    """Cosine distance = 1 - cosine similarity."""
+    if track_feature is None:
         return 1.0  # max cost if no feature
-    f1 = track.feature / np.linalg.norm(track.feature)
-    f2 = det_feature / np.linalg.norm(det_feature)
-    return 1.0 - np.dot(f1, f2)
+    f1 = track_feature / (np.linalg.norm(track_feature) + 1e-12)
+    f2 = det_feature / (np.linalg.norm(det_feature) + 1e-12)
+    return float(1.0 - np.dot(f1, f2))
 
-def build_cost_matrix(tracks, detections,features, w_motion, w_app):
-    """Combine motion & appearance costs into an (N×M) matrix."""
-    N = len(tracks)
-    M = len(detections)
-    cost = np.zeros((N, M))
-    # TODO: fill cost[i,j] = w_motion*motion_cost + w_app*appearance_cost
-    
-    for i,track in enumerate(tracks):
-            for j,det_bbox in enumerate(detections):
-                mc = motion_cost(track,det_bbox)
-                ac = appearance_cost(track,features[j])
-                cost[i,j] = w_motion * mc + w_app * ac
+def appearance_cost_matrix(
+    track_feats: np.ndarray,
+    det_feats: np.ndarray,
+    track_has_feat: np.ndarray
+) -> np.ndarray:
+    """
+    Cosine distance matrix (T,D):
+      cost = 1 - cosine_similarity
+
+    If a track has no feature, we force its cost row to 1.0 (max cost),
+    matching your old scalar behavior.
+
+    Args:
+      track_feats: (T,F) float32
+      det_feats: (D,F) float32
+      track_has_feat: (T,) bool
+
+    Returns:
+      (T,D) float32 matrix in [0,2] but practically [0,1] if normalized; we clip to [0,1].
+    """
+    T = track_feats.shape[0]
+    D = det_feats.shape[0]
+
+    if T == 0 or D == 0:
+        return np.zeros((T, D), dtype=np.float32)
+
+    # Normalize features (avoid divide by 0)
+    eps = 1e-12
+
+    trk = track_feats.astype(np.float32, copy=False)
+    det = det_feats.astype(np.float32, copy=False)
+
+    trk_norm = trk / (np.linalg.norm(trk, axis=1, keepdims=True) + eps)  # (T,F)
+    det_norm = det / (np.linalg.norm(det, axis=1, keepdims=True) + eps)  # (D,F)
+
+    # Cosine similarity: (T,D) = (T,F) @ (F,D)
+    sim = trk_norm @ det_norm.T  # (T,D)
+
+    # Convert to cosine distance cost
+    cost = (1.0 - sim).astype(np.float32)
+
+    # Tracks without features => max cost
+    # We set the entire row to 1.0 (same as your scalar function returning 1.0)
+    if track_has_feat is not None and track_has_feat.size == T:
+        cost[~track_has_feat, :] = 1.0
+
+    # Keep bounded for sanity
+    cost = np.clip(cost, 0.0, 1.0)
     return cost
 
-def assign_detections(cost_matrix):
+
+# -----------------------------
+# Assignment
+# -----------------------------
+def hungarian_assign(cost: np.ndarray) -> Tuple[List[Tuple[int, int]], List[int], List[int]]:
     """
-    Solve Hungarian:
-    returns matches, unmatched_tracks, unmatched_dets
+    Solve Hungarian for minimal assignment.
+    Returns:
+        matches: (track_idx, det_idx)
+        unmatched_tracks: [track_idx]
+        unmatched_dets: [det_idx]
     """
-    #1 run hungarian to get tje minimal cost assignment
-    row_ind, col_ind = linear_sum_assignment(cost_matrix)
-    # 2) Build the matched pairs
+    if cost.size == 0:
+        # Nothing to match
+        return [], list(range(cost.shape[0])), list(range(cost.shape[1]))
+    
+
+    # Run Hungarian
+    row_ind, col_ind = linear_sum_assignment(cost)
+
+    # Build the matched pairs
     matches = list(zip(row_ind.tolist(), col_ind.tolist()))
 
-    # 3) Determine which tracks/detections were left out
-    all_tracks = set(range(cost_matrix.shape[0]))
-    all_dets   = set(range(cost_matrix.shape[1]))
+    # Determine unmatched pairs 
+    all_tracks = set(range(cost.shape[0]))
+    all_dets   = set(range(cost.shape[1]))
     matched_tracks = set(row_ind.tolist())
-    matched_detections = set(col_ind.tolist())
+    matched_dets   = set(col_ind.tolist())
 
-    unmatched_tracks = list(all_tracks - matched_tracks)
-    unmatched_dets   = list(all_dets   - matched_detections)
+    unmatched_tracks = sorted(list(all_tracks - matched_tracks))
+    unmatched_dets   = sorted(list(all_dets - matched_dets))
 
     return matches, unmatched_tracks, unmatched_dets
 
+
+# -----------------------------
+# Track + TrackManager
+# -----------------------------
 class Track:
-    def __init__(self, track_id: int, initial_bbox: List[int], dt: float = 1.0):
-        self.id = track_id
-        # instantiate FilterPy KalmanFilter
+    """
+    KF state is [cx, cy, w, h, vx, vy, vw, vh]^T
+    Measurement z is [cx, cy, w, h]^T
+    """
+    def __init__(self, track_id: int, init_det: Det, dt: float = 1.0):
+        self.id = int(track_id)
         self.kf = FP_KalmanFilter(dim_x=8, dim_z=4)
         self._init_kf(dt)
-        # initialize state
-        initial_state = bbox2state(initial_bbox)
-        self.kf.x = np.array([
-            initial_state[0],  # cx (Center X)
-            initial_state[1],  # cy (Center Y
-            initial_state[2],  # w (Width)
-            initial_state[3],  #h (height)
-            0,                 #vx (velocity in x)
-            0,                 #vy (velocity in y)  
-            0,                 #vw (velocity in w)
-            0                  #vh (velocity in h)
-            
-        ]).reshape(8, 1)
+        
+
+        # Initialize state from detection measurement
+        cx, cy, w, h = init_det.z.flatten().tolist()
+        self.kf.x = np.array([cx, cy, w, h, 0.0, 0.0, 0.0, 0.0], dtype=np.float32).reshape(8, 1)
 
         #Initialize other attributes
-        self.bbox = initial_bbox  # [x1, y1, x2, y2]
-        self.feature = None  # appearance feature vector
-        self.missed = 0  # number of consecutive misses
-        self.hits = 1  # total number of hits
+        self.conf = init_det.conf            # Store conf
+        self.class_name = init_det.class_name # Store class
+        self.bbox_xyxy: List[float] = [init_det.x1, init_det.y1, init_det.x2, init_det.y2]
+        self.feature: np.ndarray | None = init_det.embedding
+
+        self.missed: int = 0  # number of consecutive misses
+        self.hits: int = 1  # total number of hits
         
-        
-        
-    
-    def _init_kf(self, dt: float):
+
+    def _init_kf(self, dt: float) -> None:
         # State transition matrix (constant velocity)
-        F = np.eye(8)
+        F = np.eye(8, dtype=np.float32)
         for i in range(4):
-            F[i, i+4] = dt
+            F[i, i + 4] = dt
         self.kf.F = F
         
         # Measurement matrix: observe [cx, cy, w, h]
-        self.kf.H = np.zeros((4, 8))
-        self.kf.H[:, :4] = np.eye(4)
+        H = np.zeros((4, 8), dtype=np.float32)
+        H[:, :4] = np.eye(4, dtype=np.float32)
+        self.kf.H = H
 
-        # 1) Initialize covariance P (start uncertain about velocity)
-        
-        #    FilterPy default P is eye(dim_x) so we just scale it up
+        #TODO: Tune Values Later
+        # Initialize covariance P (start uncertain about velocity)
         self.kf.P *= 1000.0
+        
+        # Measurement noise R
+        # Higher value -> trust measurements less
+        self.kf.R = np.eye(4, dtype=np.float32) * 10.0
 
-        # 2) Measurement noise R
-
-        #    Higher value → trust measurements less
-        self.kf.R = np.eye(4) * 10.0
-
-        # 3) Process noise Q
-        #    Small value → assume near‐constant velocity
-        self.kf.Q = np.eye(self.kf.dim_x) * 0.01
+        # Process noise Q
+        # Small value -> assume near‐constant velocity
+        self.kf.Q = np.eye(8, dtype=np.float32) * 0.01
     
 
-    def predict(self) -> List[int]:
-        #1. predict
+    def predict(self) -> None:
         self.kf.predict()
-
-        # Convert state → bbox
-        self.bbox = state2bbox(self.kf.x.flatten())
-        
-        self.missed +=1
-        return self.bbox
+        self.bbox_xyxy = state2bbox_xyxy(self.kf.x.flatten())
+        self.missed +=1     # increment; reset to 0 on successful update
 
 
-    def update(self, detection_bbox: List[int], feature: np.ndarray) -> List[int]:
-        #1. bbbox into a 4x1 vect
-        z = bbox2state(detection_bbox).reshape(4,1)
-
-        #2. update the kf
-        self.kf.update(z)
-
-        #convert to bbox after the corrected stat
-        self.bbox = state2bbox(self.kf.x.flatten())
-
-        self.feature = feature
+    def update(self, det: Det) -> None:
+        self.kf.update(det.z)
+        self.bbox_xyxy = state2bbox_xyxy(self.kf.x.flatten())
+        self.conf = det.conf                 # Update conf
+        self.class_name = det.class_name    # Not sure how this could happen but...
+        self.feature = det.embedding
         self.missed = 0
-        #update the amount of tiems a track has been matched to a detection
+        # Update the amount of times a track has been matched to a detection
         self.hits += 1
-        
-        return self.bbox
+
+    def z_pred(self) -> np.ndarray:
+        """
+        Predicted measurement (4,) in cxcywh:
+          z_pred = Hx
+        Using this keeps motion costs consistent with Mahalanobis gating space.
+        """
+        z = (self.kf.H @ self.kf.x).reshape(4,)
+        return z.astype(np.float32, copy=False)
+    
 
 class TrackManager:
-    def __init__(self,max_age: int,min_hits: int,gate_thresh: float,w_motion: float,w_app: float):
+    def __init__(
+        self, 
+        max_age: int, 
+        min_hits: int, 
+        gate_d2_thresh: float, 
+        w_motion: float, 
+        w_app: float,
+        dt: float = 1.0,
+        image_dims: tuple[int, int] = (720, 1280),  # <--- TODO: placeholder dims, must verify
+    ):
         self.tracks: List[Track] = []
-        self.next_id = 0
-        self.max_age = max_age
-        self.min_hits = min_hits
-        self.gate_thresh = gate_thresh
-        self.w_motion = w_motion
-        self.w_app = w_app
+        self.next_id: int = 0
 
-    def predict_all(self) -> None:
+        self.max_age = int(max_age)
+        self.min_hits = int(min_hits)
+
+        # This threshold is squared Mahalanobis distance
+        self.gate_d2_thresh = float(gate_d2_thresh)
+
+        self.w_motion = float(w_motion)
+        self.w_app = float(w_app)
+        self.dt = float(dt)
+
+        self.image_dims = image_dims
+
+
+        # ---- tiny adapters (for use with DataAssociation) ----
+    @staticmethod
+    def _stack_track_z(tracks: List[Track]) -> np.ndarray:
+        """
+        Stack predicted track measurements into (T,4) cxcywh.
+        """
+        if len(tracks) == 0:
+            return np.zeros((0, 4), dtype=np.float32)
+        return np.stack([t.z_pred() for t in tracks], axis=0).astype(np.float32)
+
+    @staticmethod
+    def _stack_det_z(detections: List[Det]) -> np.ndarray:
+        """
+        Stack detection measurements into (D,4) cxcywh.
+        """
+        if len(detections) == 0:
+            return np.zeros((0, 4), dtype=np.float32)
+        return np.stack([d.z.reshape(4,) for d in detections], axis=0).astype(np.float32)
+
+    @staticmethod
+    def _stack_track_features(tracks: List[Track], feat_dim: int = 128) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Stack track features into (T,F). If a track has no feature, fill zeros and mark it invalid.
+
+        Returns:
+          feats: (T,F) float32
+          has_feat: (T,) bool
+        """
+        T = len(tracks)
+        if T == 0:
+            return np.zeros((0, feat_dim), dtype=np.float32), np.zeros((0,), dtype=bool)
+
+        feats = np.zeros((T, feat_dim), dtype=np.float32)
+        has_feat = np.zeros((T,), dtype=bool)
+
+        for i, t in enumerate(tracks):
+            if t.feature is None:
+                continue
+            feats[i, :] = t.feature.astype(np.float32, copy=False)
+            has_feat[i] = True
+
+        return feats, has_feat
+
+    @staticmethod
+    def _stack_det_features(detections: List[Det], feat_dim: int = 128) -> np.ndarray:
+        """
+        Stack detection embeddings into (D,F).
+        """
+        D = len(detections)
+        if D == 0:
+            return np.zeros((0, feat_dim), dtype=np.float32)
+        return np.stack([d.embedding.astype(np.float32, copy=False) for d in detections], axis=0)
+    
+
+    def step(self, detections: List[Det]) -> List[Track]:
+        # 1) Predict existing tracks forward
         for trk in self.tracks:
             trk.predict()
 
-    def update(self,detections: List[List[int]],features: List[np.ndarray]) -> List[Track]:
-        # 1) Predict
-        self.predict_all()
+        # If no tracks exist, create from all detections
+        if len(self.tracks) == 0:
+            for det in detections:
+                self.tracks.append(Track(self.next_id, det, dt=self.dt))
+                self.next_id += 1
+            return [t for t in self.tracks if t.hits >= self.min_hits]
+        
+        # If no detections, just age/prune tracks
+        if len(detections) == 0:
+            self.tracks = [t for t in self.tracks if t.missed <= self.max_age]
+            return [t for t in self.tracks if t.hits >= self.min_hits]
+        
+        # ---- adapters (build arrays once per frame) ----
+        Zt = self._stack_track_z(self.tracks)      # (T,4) cxcywh
+        Zd = self._stack_det_z(detections)         # (D,4) cxcywh
 
-        # 2) Build cost matrix & gatej
-        cost = build_cost_matrix(self.tracks, detections, self.w_motion, self.w_app)
-        index = cost>self.gate_thresh
-        cost[index] = 1e6
+        Ft, track_has_feat = self._stack_track_features(self.tracks, feat_dim=128)  # (T,128), (T,)
+        Fd = self._stack_det_features(detections, feat_dim=128)                      # (D,128)
 
-        # 3) Associate
-        matches, unmatched_tracks, unmatched_dets = assign_detections(cost)
+        # ---- vectorized motion cost via DataAssociation (returns (T,D)) ----
+        mc = weighted_mean_cost_matrix(
+            tracks=Zt,
+            detections=Zd,
+            image_dims=self.image_dims,
+            # You can pass custom lambdas here if you want:
+            # lambda_iou=0.7, lambda_de=0.2, lambda_r=0.1
+        ).astype(np.float32, copy=False)  # (T,D)
 
-        # 4) Update matched
+        # ---- vectorized appearance cost (returns (T,D)) ----
+        ac = appearance_cost_matrix(Ft, Fd, track_has_feat).astype(np.float32, copy=False)  # (T,D)
+
+        # ---- gating mask (returns (T,D) bool) ----
+        gate = mahalanobis_gate_mask(self.tracks, Zd, self.gate_d2_thresh)  # (T,D)
+
+        # ---- combine costs ----
+        cost = (self.w_motion * mc) + (self.w_app * ac)  # (T,D)
+
+        # Any disallowed pairing becomes "impossible"
+        cost = cost.astype(np.float32, copy=False)
+        cost[~gate] = 1e6
+
+        # 3) Hungarian assignment
+        matches, unmatched_tracks, unmatched_dets = hungarian_assign(cost)
+
+        # 4) Update matched tracks
         for trk_idx, det_idx in matches:
-            self.tracks[trk_idx].update(detections[det_idx], features[det_idx])
+            if cost[trk_idx, det_idx] >= 1e6:
+                unmatched_tracks.append(trk_idx)
+                unmatched_dets.append(det_idx)
+                continue
+            self.tracks[trk_idx].update(detections[det_idx])
 
-        # 5) Handle unmatched tracks
-        self.tracks = [
-            trk for trk in self.tracks
-            if trk.missed <= self.max_age
-        ]
+        # 5) Unmatched tracks: do nothing (they already had missed++ in predict())
+        unmatched_dets = sorted(set(unmatched_dets))
+
         # 6) Create new tracks for unmatched detections
         for det_idx in unmatched_dets:
-            new_trk = Track(self.next_id, detections[det_idx])
-            new_trk.feature = features[det_idx]
-            self.tracks.append(new_trk)
+            self.tracks.append(Track(self.next_id, detections[det_idx], dt=self.dt))
             self.next_id += 1
 
-        # 7. Filter by minimum age/hits
-        output_tracks = [
-            trk for trk in self.tracks
-            if trk.hits >= self.min_hits
-        ]
+        # 7) Prune dead tracks
+        self.tracks = [t for t in self.tracks if t.missed <= self.max_age]
 
-        return output_tracks
+        # 8) Return only publishable tracks
+        return [t for t in self.tracks if t.hits >= self.min_hits]
 
-#ROS NODE
+
+
+# -----------------------------
+# ROS Node
+# -----------------------------
 class TrackingNode(Node):
     def __init__(self):
-            super().__init__('tracking_node')
-            self.bridge = CvBridge()
-            self.yolo = YOLO('yolov8n.pt')
-            #initiate track manager
+            super().__init__('tracking_node')   
+
+            image_dims = (720, 1280)  # (H,W) <-- TODO: set to your camera feed size, consider as ROS params 
+
             self.track_manager = TrackManager(
-                max_age = 30, #Deletes the track if it hasnt been updated in 30 frames
-                min_hits = 3, #Only publishes tracks that have been updated at least 3
-                gate_thresh = 9.4877, 
-                w_motion = 0.5, #Weight for motion cost
-                w_app = 0.5 #Weight for appearance cost
+                max_age=30, # Deletes the track if it hasnt been updated in 30 frames
+                min_hits=1, # Only publishes tracks that have been updated at least 3
+                gate_d2_thresh=9.4877,   # chi2.ppf(0.95, df=4) is ~9.49
+                w_motion=0.5, #W eight for motion cost
+                w_app=0.5, # Weight for appearance cost
+                dt=1.0,
+                image_dims=image_dims,
             )
-            self.sub_det = self.create_subscription(DetectionArray, '/kestrel/detections', self.dets_cb, 10)
+            
+            self.sub_det = self.create_subscription(
+                DetectionArray, 
+                '/kestrel/detections', 
+                self.dets_cb, 
+                10,
+            )
             self.pub_tracks = self.create_publisher(TrackArray, '/kestrel/tracks', 10)
-            # Initialize Kalman filter class here
-            self.kf = FP_KalmanFilter(dim_x=8, dim_z=4)
 
-    def dets_cb(self, det_msg:DetectionArray):
-        # 1. Predict all tracks
-        self.track_manager.predict_all()
-        # extract appearance features from the cnn
-        detection_bboxes = []
-        detection_features = []
-        for det in det_msg.detections:
-            #Extract bounding box
-            bbox = det2bbox(det)
-            detection_bboxes.append(bbox)
+    def publish_tracks(self, header, tracks: List[Track]) -> None:
+        """Turn internal tracks into TrackArray message and publish."""
+        msg = TrackArray()
+        msg.header = header
 
-            #Extract appearance feature (dummy example, replace with actual feature extraction)
-            #Using placeholders for now, will replace with actual CNN later
-            feature = np.random.rand(128)
-            detection_features.append(feature)
+        for trk in tracks:
+            t = TrackMsg()
+            t.id = int(trk.id)
+            # Publish current bbox (xyxy). Keep float.
+            t.x1 = float(trk.bbox_xyxy[0])
+            t.y1 = float(trk.bbox_xyxy[1])
+            t.x2 = float(trk.bbox_xyxy[2])
+            t.y2 = float(trk.bbox_xyxy[3])
             
-        # 2. Gate & associate (week-2) (Extract bboxes)
-        # Cost matrix comparing all tracks to all detections
-        cost_matrix = build_cost_matrix(self.track_manager.tracks, detection_bboxes, self.track_manager.w_motion, self.track_manager.w_app)
-        # Apply gating - high cost for invalid assignments
-        if len(self.track_manager.tracks) > 0 and len(detection_bboxes) > 0:
-            for i, track in enumerate(self.track_manager.tracks):
-                for j, det_bbox in enumerate(detection_bboxes):
-                    # Calculate innovation covariance for gating
-                    innovation_cov = track.kf.H @ track.kf.P @ track.kf.H.T + track.kf.R
-                    
-                    # Check if assignment is valid using Mahalanobis distance
-                    if not mahalanobis_gate(track.kf, det_bbox, innovation_cov, self.track_manager.gate_thresh):
-                        cost_matrix[i, j] = 1e6
-        
-        #Hungarian algorithm to find optimal assignments
-        matches, unmatched_tracks, unmatched_dets = assign_detections(cost_matrix)
-        
+            t.center_x = (t.x1 + t.x2) / 2.0
+            t.center_y = (t.y1 + t.y2) / 2.0
 
-        # 3. Update tracks or create new tracks
-        
-        #we assume that each track has the following features that we must update or delete based on whether the tracker
-        #gets matched for N frames
+            t.conf = float(trk.conf)
+            t.class_name = str(trk.class_name)
 
-        #Update matched tracks
-        for trk_idx, det_idx in matches:
-            trk = self.track_manager.tracks[trk_idx]
-            #update every feature of a track, meaning the bboxes & features
-            trk.update(detection_bboxes[det_idx], detection_features[det_idx])
-            
-        #Create new tracks for any unmatched detections
-        for det_idx in unmatched_dets:
-            new_track = Track(self.track_manager.next_id, detection_bboxes[det_idx])
-            new_track.feature = detection_features[det_idx]
-            self.track_manager.tracks.append(new_track)
-            self.track_manager.next_id +=1
+            # Copy the embedding from the internal Track object to the ROS message
+            if trk.feature is not None:
+                # trk.feature is a numpy array, convert to list for ROS
+                t.embedding = trk.feature.tolist()
+                
+            msg.tracks.append(t)
+
+        self.pub_tracks.publish(msg)
 
 
-        #Remove any track with missed > max_age
-        self.track_manager.tracks = [
-            trk for trk in self.track_manager.tracks
-            if trk.missed <= self.track_manager.max_age
-        ]
-
-
-        #4 Build and Publish
-        track_array_msg = TrackArray()
-        track_array_msg.header = det_msg.header            
-        # track_array_msg.tracks.append(to_track_msg(track))  #TODO adding tracks as needed
-        for trk in self.track_manager.tracks:
-            if trk.hits >= self.track_manager.min_hits:
-                track_msg = TrackMsg()
-                track_msg.id = trk.id
-                track_msg.x1 = float(trk.bbox[0])
-                track_msg.y1 = float(trk.bbox[1])
-                track_msg.x2 = float(trk.bbox[2])
-                track_msg.y2 = float(trk.bbox[3])
-                track_array_msg.tracks.append(track_msg)
-
-        self.pub_tracks.publish(track_array_msg)         # publish the instance
+    def dets_cb(self, det_msg: DetectionArray) -> None:
+        dets = [det_from_ros(d) for d in det_msg.detections]
+        active_tracks = self.track_manager.step(dets)
+        self.publish_tracks(det_msg.header, active_tracks)
 
 
 def main(args=None):
     rclpy.init(args=args)
     node = TrackingNode()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
-
