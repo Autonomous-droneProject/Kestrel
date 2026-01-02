@@ -1,3 +1,4 @@
+#!/bin/bash
 ros2 run ros_gz_bridge parameter_bridge \
 /lidar/down@sensor_msgs/msg/LaserScan@gz.msgs.LaserScan \
 /lidar/forward@sensor_msgs/msg/LaserScan@gz.msgs.LaserScan \

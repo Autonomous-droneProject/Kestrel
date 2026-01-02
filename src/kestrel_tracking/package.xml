@@ -10,7 +10,7 @@
 
   <exec_depend>rclpy</exec_depend>
   <exec_depend>kestrel_msgs</exec_depend>
-  <exec_depend>python3-filterpy</exec_depend>
+  <exec_depend>filterpy</exec_depend>
   <exec_depend>cv_bridge</exec_depend>
   <exec_depend>ultralytics</exec_depend>
 

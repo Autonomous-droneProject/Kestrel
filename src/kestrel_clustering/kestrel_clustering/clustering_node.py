@@ -11,7 +11,7 @@ from kestrel_msgs.msg import TrackArray
 
 #GLOBAL VARIABLES
 #Topics
-subscribed_topic = "/kestrel/whitelist_tracks" #David may need to change this once the input node is implemented
+subscribed_topic = "/kestrel/tracks" #David may need to change this once the input node is implemented
 published_topic = "/kestrel/track_center" #The next node in the ROS graph needs to subscribe to this one
 
 
