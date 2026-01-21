@@ -172,3 +172,6 @@ Docker/tasks.json
 build_log.txt
 .vscode/
 .ignores/
+
+# IDE
+.idea/
