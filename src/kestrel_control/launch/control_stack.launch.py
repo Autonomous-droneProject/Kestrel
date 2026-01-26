@@ -40,9 +40,31 @@ def generate_launch_description():
         name='frame_transformer_node',
         output='screen'
     )
-    
+
+    # Trajectory controller for smooth path following (Pure Pursuit 3D)
+    # This runs in parallel with WaypointManager - choose which to use via topic remapping
+    # To use: remap 'trajectory/setpoint' to 'mavros/setpoint_raw/local'
+    traj_controller_node = Node(
+        package='kestrel_control',
+        executable='traj_controller_node',
+        name='traj_controller',
+        output='screen',
+        parameters=[
+            os.path.join(kestrel_control_share, 'config', 'traj_controller.yaml')
+        ],
+        remappings=[
+            ('planning/path', 'planning/path'),
+            ('odometry/local_pose', 'odometry/local_pose'),
+            # Default: publish to separate topic (parallel with WaypointManager)
+            # Change to 'mavros/setpoint_raw/local' to use as primary controller
+            ('trajectory/setpoint', 'trajectory/setpoint'),
+        ]
+    )
+
     return LaunchDescription([
         ardupilot_translator_node,
         command_validator_node,
-        frame_transformer_node
+        frame_transformer_node,
+        # Uncomment the line below to enable trajectory controller
+        # traj_controller_node,
     ])

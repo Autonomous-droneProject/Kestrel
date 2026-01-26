@@ -1,0 +1,39 @@
+# Trajectory Controller Configuration
+# Pure Pursuit 3D path following parameters
+
+traj_controller:
+  ros__parameters:
+    # Pure pursuit lookahead distance (meters)
+    # Larger = smoother paths but cuts corners more
+    # Smaller = tighter tracking but more oscillation
+    lookahead_dist: 1.0
+
+    # Cruise speed when waypoints don't specify velocity (m/s)
+    cruise_v: 1.5
+
+    # Maximum allowed velocity (m/s)
+    # Should match CommandValidator limits for safety
+    max_v: 2.0
+
+    # Slowdown distance from final goal (meters)
+    # Drone will linearly reduce speed within this distance
+    # Set to 0 to disable slowdown
+    slowdown_dist: 2.0
+
+    # Position tolerance for "reached waypoint" (meters)
+    pos_tol: 0.3
+
+    # Yaw tolerance for final heading (radians)
+    yaw_tol: 0.1
+
+    # Advance tolerance: distance to next waypoint before advancing segment (meters)
+    # This enables O(1) segment tracking
+    advance_tol: 0.5
+
+    # Minimum velocity near goal (m/s)
+    # Prevents drone from creeping too slowly
+    min_v_near_goal: 0.1
+
+    # Control loop rate (Hz)
+    # 50 Hz provides smooth tracking without excessive CPU
+    control_rate: 50.0

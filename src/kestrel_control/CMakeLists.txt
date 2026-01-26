@@ -8,9 +8,11 @@ find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(kestrel_msgs REQUIRED)
 find_package(control_toolbox REQUIRED)
 find_package(mavros_msgs REQUIRED)
+find_package(tf2 REQUIRED)
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};/usr/share/cmake/geographiclib")
 find_package(GeographicLib REQUIRED)
 
@@ -21,16 +23,19 @@ include_directories(include)
 add_library(kestrel_control_lib
   src/command_validator.cpp
   src/frame_transformer.cpp
+  src/traj_controller.cpp
 )
 
 # Link lib to dependencies
 ament_target_dependencies(kestrel_control_lib
   rclcpp
   geometry_msgs
+  nav_msgs
   kestrel_msgs
   sensor_msgs
   mavros_msgs
   control_toolbox
+  tf2
   GeographicLib
 )
 
@@ -40,6 +45,7 @@ add_executable(command_validator_node src/command_validator_node.cpp)
 add_executable(dynamic_camera_control_node src/dynamic_camera_control_node.cpp)
 add_executable(frame_transformer_node src/frame_transformer_node.cpp)
 add_executable(servo_to_mavros_bridge src/servo_to_mavros_bridge.cpp)
+add_executable(traj_controller_node src/traj_controller_node.cpp)
 
 # Link dependencies
 #ament_target_dependencies(ardupilot_translator_node "rclcpp" "geometry_msgs" "mavros_msgs")
@@ -52,6 +58,7 @@ target_link_libraries(command_validator_node PUBLIC kestrel_control_lib)
 target_link_libraries(dynamic_camera_control_node PUBLIC kestrel_control_lib)
 target_link_libraries(frame_transformer_node PUBLIC kestrel_control_lib)
 target_link_libraries(servo_to_mavros_bridge PUBLIC kestrel_control_lib)
+target_link_libraries(traj_controller_node PUBLIC kestrel_control_lib)
 
 
 
@@ -62,6 +69,7 @@ install(TARGETS
   dynamic_camera_control_node
   frame_transformer_node
   servo_to_mavros_bridge
+  traj_controller_node
   DESTINATION lib/${PROJECT_NAME}
 )
 
